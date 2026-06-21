@@ -14,7 +14,7 @@
   <description>
     <p>
       AI Desktop Hub is a Linux-first Electron desktop wrapper for AI platforms such as
-      ChatGPT, Claude, Gemini, Grok, DeepSeek, and Qwen.
+      ChatGPT, Claude, Gemini, Grok, DeepSeek, Qwen, and Z.ai.
     </p>
     <p>
       It provides isolated sessions per provider, provider-specific desktop launchers,
@@ -44,6 +44,7 @@
     <keyword>Gemini</keyword>
     <keyword>DeepSeek</keyword>
     <keyword>Qwen</keyword>
+    <keyword>Z.ai</keyword>
     <keyword>wrapper</keyword>
     <keyword>electron</keyword>
   </keywords>
@@ -70,6 +71,7 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="2.0.1" date="2026-06-22"/>
     <release version="2.0.0" date="2026-04-11"/>
   </releases>
 </component>

@@ -108,6 +108,23 @@ const APPS = Object.freeze({
       /(^|\.)login\.live\.com$/i,
       /(^|\.)appleid\.apple\.com$/i
     ]
+  },
+  zai: {
+    id: 'zai',
+    name: 'Z.ai',
+    title: 'Z.ai',
+    url: 'https://chat.z.ai/',
+    icon: 'providers/zai.png',
+    loginDomains: [
+      /(^|\.)z\.ai$/i,
+      /(^|\.)chat\.z\.ai$/i,
+      /(^|\.)chatglm\.cn$/i,
+      /(^|\.)zhipuai\.cn$/i,
+      /(^|\.)accounts\.google\.com$/i,
+      /(^|\.)login\.microsoftonline\.com$/i,
+      /(^|\.)login\.live\.com$/i,
+      /(^|\.)appleid\.apple\.com$/i
+    ]
   }
 });
 

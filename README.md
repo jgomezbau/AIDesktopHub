@@ -44,6 +44,10 @@ AI Desktop Hub turns supported AI web apps into standalone Linux desktop applica
       <img src="assets/icons/providers/qwen.png" alt="Qwen" width="48" height="48"><br>
       <strong>Qwen</strong>
     </td>
+    <td align="center" width="16.6%">
+      <img src="assets/icons/providers/zai.png" alt="Z.ai" width="48" height="48"><br>
+      <strong>Z.ai</strong>
+    </td>
   </tr>
 </table>
 
@@ -56,6 +60,7 @@ AI Desktop Hub turns supported AI web apps into standalone Linux desktop applica
 - First-run chooser window labeled `Elegi un Asistente`
 - Remembers the last assistant used in generic mode
 - Assistant switching from the system tray in generic mode
+- About window in the system tray with application and runtime component versions
 - AI Desktop Hub branding for taskbar, tray, and window icon in generic mode
 - Assistant-specific launchers, icons, and runtime identity when launched directly
 - Linux packaging for `AppImage`, `.deb`, and `tar.gz`
@@ -86,6 +91,7 @@ npm run start:gemini
 npm run start:grok
 npm run start:deepseek
 npm run start:qwen
+npm run start:zai
 ```
 
 You can also launch directly with:
@@ -135,9 +141,12 @@ Useful commands:
 ```bash
 npm run dev
 npm run debug
-node -c src/main/index.js
-node -c src/preload/preload.js
+npm test
+npm run check:syntax
+npm run ci
 ```
+
+The test suite uses the native Node.js test runner and covers provider resolution and command-line argument parsing. `npm run ci` performs syntax checks, runs the tests, and validates an unpacked application build.
 
 ## Build And Packaging
 
@@ -165,6 +174,20 @@ Packaging notes:
 - The Debian package installs the main `AIDesktopHub.desktop` entry plus assistant-specific `.desktop` launchers.
 - Flatpak metadata and desktop entries are maintained in [`flatpak/`](flatpak/).
 
+## Release Automation
+
+GitHub Actions validates pushes and pull requests with syntax checks, automated tests, and an unpacked build. Pull requests never publish releases.
+
+Releases are triggered only by semantic version tags such as `v2.0.1`. The release workflow verifies that the tag matches the version in `package.json`, builds the AppImage, Debian package, and `tar.gz`, generates `SHA256SUMS.txt`, and attaches all four artifacts to the GitHub Release. Commit messages do not trigger releases.
+
+For Debian and Ubuntu, install the `.deb` package. On other Linux distributions, use the AppImage or extract the `tar.gz` archive.
+
+After downloading the release files, verify their integrity from the same directory:
+
+```bash
+sha256sum --check SHA256SUMS.txt
+```
+
 ## Flatpak
 
 Local Flatpak build:
@@ -182,6 +205,7 @@ flatpak run io.github.jgomezbau.AIDesktopHub --app=gemini
 flatpak run io.github.jgomezbau.AIDesktopHub --app=grok
 flatpak run io.github.jgomezbau.AIDesktopHub --app=deepseek
 flatpak run io.github.jgomezbau.AIDesktopHub --app=qwen
+flatpak run io.github.jgomezbau.AIDesktopHub --app=zai
 ```
 
 ## Screenshots
@@ -198,10 +222,13 @@ Screenshots used for Flatpak/AppStream metadata live in [`flatpak/screenshots`](
 │   │   ├── providers/
 │   │   └── source/
 │   └── linux/
+├── .github/
+│   └── workflows/
 ├── flatpak/
 ├── src/
 │   ├── main/
 │   └── preload/
+├── test/
 ├── CHANGELOG.md
 ├── LICENSE
 ├── README.md
@@ -218,7 +245,7 @@ Screenshots used for Flatpak/AppStream metadata live in [`flatpak/screenshots`](
 
 ## Session Model
 
-Each assistant uses its own Electron partition and user-data directory. This keeps cookies, storage, and login state isolated between ChatGPT, Claude, Gemini, Grok, DeepSeek, and Qwen.
+Each assistant uses its own Electron partition and user-data directory. This keeps cookies, storage, and login state isolated between ChatGPT, Claude, Gemini, Grok, DeepSeek, Qwen, and Z.ai.
 
 In generic mode, AI Desktop Hub also stores a small separate configuration file for the last assistant used:
 
@@ -250,7 +277,8 @@ It is not affiliated with, endorsed by, sponsored by, or supported by the compan
 - xAI
 - DeepSeek
 - Alibaba
+- Zhipu AI
 
-`ChatGPT`, `Claude`, `Gemini`, `Grok`, `DeepSeek`, `Qwen`, and any related product names, logos, icons, and trademarks are the property of their respective owners.
+`ChatGPT`, `Claude`, `Gemini`, `Grok`, `DeepSeek`, `Qwen`, `Z.ai`, and any related product names, logos, icons, and trademarks are the property of their respective owners.
 
 This repository is intended to provide a Linux desktop wrapper experience for publicly available web applications. Users are responsible for complying with the terms of service, account requirements, and usage policies of each respective service.

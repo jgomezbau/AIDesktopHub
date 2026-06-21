@@ -17,7 +17,7 @@ ICON_DST="/usr/share/icons/hicolor/512x512/apps"
 
 install -Dm644 "$MAIN_ICON_SRC" "$ICON_DST/AIDesktopHub.png"
 
-for provider in chatgpt claude gemini grok deepseek qwen; do
+for provider in chatgpt claude gemini grok deepseek qwen zai; do
   install -Dm644 "$DESKTOP_SRC/AIDesktopHub-$provider.desktop" "$DESKTOP_DST/AIDesktopHub-$provider.desktop"
   install -Dm644 "$ICON_SRC/$provider.png" "$ICON_DST/AIDesktopHub-$provider.png"
 done

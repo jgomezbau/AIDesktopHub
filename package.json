@@ -1,7 +1,7 @@
 {
   "name": "aidesktophub",
-  "version": "2.0.0",
-  "description": "Linux desktop wrapper for ChatGPT, Claude, Gemini, Grok, DeepSeek, and Qwen",
+  "version": "2.0.1",
+  "description": "Linux desktop wrapper for ChatGPT, Claude, Gemini, Grok, DeepSeek, Qwen, and Z.ai",
   "homepage": "https://github.com/jgomezbau/AIDesktopHub",
   "author": "Juan Bau <jgomezbau@gmail.com>",
   "repository": {
@@ -17,6 +17,9 @@
     "npm": ">=8"
   },
   "scripts": {
+    "test": "node --test",
+    "check:syntax": "node -c src/main/apps.js && node -c src/main/index.js && node -c src/main/ipc.js && node -c src/main/runtime-flags.js && node -c src/preload/preload.js && node -c src/preload/clipboard-fix.js && node -c src/preload/inject-styles.js",
+    "ci": "npm run check:syntax && npm test && npm run build:dir",
     "start": "electron .",
     "start:chatgpt": "electron . --app=chatgpt",
     "start:claude": "electron . --app=claude",
@@ -24,6 +27,7 @@
     "start:grok": "electron . --app=grok",
     "start:deepseek": "electron . --app=deepseek",
     "start:qwen": "electron . --app=qwen",
+    "start:zai": "electron . --app=zai",
     "dev": "electron . --enable-logging",
     "dev:chatgpt": "electron . --enable-logging --app=chatgpt",
     "dev:claude": "electron . --enable-logging --app=claude",
@@ -31,6 +35,7 @@
     "dev:grok": "electron . --enable-logging --app=grok",
     "dev:deepseek": "electron . --enable-logging --app=deepseek",
     "dev:qwen": "electron . --enable-logging --app=qwen",
+    "dev:zai": "electron . --enable-logging --app=zai",
     "debug": "electron --inspect=5858 .",
     "build:dir": "electron-builder --dir",
     "build": "electron-builder",
@@ -80,7 +85,7 @@
       ],
       "category": "Utility",
       "synopsis": "Linux desktop wrapper for AI web apps",
-      "description": "Desktop wrapper for ChatGPT, Claude, Gemini, Grok, DeepSeek, and Qwen with isolated sessions per provider.",
+      "description": "Desktop wrapper for ChatGPT, Claude, Gemini, Grok, DeepSeek, Qwen, and Z.ai with isolated sessions per provider.",
       "desktop": {
         "Name": "AI Desktop Hub",
         "Comment": "Desktop hub for AI assistants on Linux",

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Z.ai
+Comment=AI Desktop Hub - Z.ai
+Exec="/opt/AI Desktop Hub/AIDesktopHub" --app=zai
+Terminal=false
+Type=Application
+Icon=AIDesktopHub-zai
+Categories=Utility;Network;Chat;
+StartupWMClass=AIDesktopHub-zai

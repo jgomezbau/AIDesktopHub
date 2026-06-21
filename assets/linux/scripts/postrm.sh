@@ -6,7 +6,7 @@ ICON_DST="/usr/share/icons/hicolor/512x512/apps"
 
 rm -f "$ICON_DST/AIDesktopHub.png"
 
-for provider in chatgpt claude gemini grok deepseek qwen; do
+for provider in chatgpt claude gemini grok deepseek qwen zai; do
   rm -f "$DESKTOP_DST/AIDesktopHub-$provider.desktop"
   rm -f "$ICON_DST/AIDesktopHub-$provider.png"
 done
