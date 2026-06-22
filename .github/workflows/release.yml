@@ -56,13 +56,13 @@ jobs:
           rm -rf "$staging_dir"
           mkdir -p "$staging_dir"
 
-          npm run build:appimage
+          npm run build:appimage -- --publish never
           cp dist/*.AppImage "$staging_dir/"
 
-          npm run build:deb
+          npm run build:deb -- --publish never
           cp dist/*.deb "$staging_dir/"
 
-          npx electron-builder --linux tar.gz
+          npx electron-builder --linux tar.gz --publish never
           cp dist/*.tar.gz "$staging_dir/"
 
           rm -rf dist
