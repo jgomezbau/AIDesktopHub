@@ -13,8 +13,8 @@
   },
   "main": "src/main/index.js",
   "engines": {
-    "node": ">=18",
-    "npm": ">=8"
+    "node": ">=20.19",
+    "npm": ">=10"
   },
   "scripts": {
     "test": "node --test",

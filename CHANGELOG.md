@@ -17,7 +17,7 @@ The format is based on Keep a Changelog and this project follows semantic versio
 - Added a Dependabot configuration to keep Electron, electron-builder, and GitHub Actions patched, with a focus on security labels.
 - Added a `provider:state` IPC handler so the renderer can query the active provider and available assistants.
 - Added a Content-Security-Policy meta tag to the assistant selector window.
-- Added a Node 18/20/22 matrix to the CI workflow.
+- Added a Node 20/22 matrix to the CI workflow.
 
 ### Changed
 
@@ -32,6 +32,7 @@ The format is based on Keep a Changelog and this project follows semantic versio
 - Unified the Linux release build into a single electron-builder invocation that produces AppImage, `.deb`, and `tar.gz` in one pass.
 - Promoted ESLint and Prettier to run as part of `npm run ci`.
 - Updated the assistant selector HTML to load through the shared template renderer.
+- Raised the development/build requirement to Node.js 20.19+ and npm 10+ to match the current `electron-builder` toolchain.
 
 ### Security
 

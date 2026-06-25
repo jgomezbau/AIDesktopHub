@@ -125,8 +125,8 @@ Use `--app=<assistant>` or `npm run start:<assistant>`.
 ## Requirements
 
 - Linux
-- Node.js 18 or newer
-- npm 8 or newer
+- Node.js 20.19 or newer
+- npm 10 or newer
 
 Runtime and packaging on Debian-based systems may require:
 
