@@ -49,7 +49,7 @@ AI Desktop Hub turns supported AI web apps into standalone Linux desktop applica
       <strong>Qwen</strong>
     </td>
     <td align="center" width="16.6%">
-      <img src="assets/icons/providers/zai.png" alt="Z.ai" width="56" height="56"><br>
+      <img src="assets/icons/readme/zai.png" alt="Z.ai" width="48" height="48"><br>
       <strong>Z.ai</strong>
     </td>
   </tr>
