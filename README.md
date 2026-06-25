@@ -30,7 +30,7 @@ AI Desktop Hub turns supported AI web apps into standalone Linux desktop applica
 
 ## Supported Assistants
 
-<table width="100%">
+<table width="100%" align="center">
   <tr>
     <td align="center" width="14.28%">
       <img src="assets/icons/providers/chatgpt.png" alt="ChatGPT" width="48" height="48"><br>
