@@ -9,6 +9,14 @@
 </p>
 
 <p align="center">
+  <img src="https://img.shields.io/badge/Electron-41.1.0-47848F?logo=electron&logoColor=white" alt="Electron 41.1.0">
+  <img src="https://img.shields.io/badge/Node.js-20.19+-339933?logo=nodedotjs&logoColor=white" alt="Node.js 20.19+">
+  <img src="https://img.shields.io/badge/Linux-AppImage%20%7C%20.deb%20%7C%20tar.gz-FCC624?logo=linux&logoColor=black" alt="Linux AppImage .deb tar.gz">
+  <img src="https://img.shields.io/badge/Assistants-7%20providers-7C3AED" alt="7 supported AI assistants">
+  <img src="https://img.shields.io/badge/License-MIT-green" alt="MIT License">
+</p>
+
+<p align="center">
   Linux-first Electron desktop wrapper for popular AI assistants
 </p>
 
