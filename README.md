@@ -143,10 +143,19 @@ npm run dev
 npm run debug
 npm test
 npm run check:syntax
+npm run lint
+npm run lint:fix
+npm run format
 npm run ci
 ```
 
-The test suite uses the native Node.js test runner and covers provider resolution and command-line argument parsing. `npm run ci` performs syntax checks, runs the tests, and validates an unpacked application build.
+The test suite uses the native Node.js test runner and covers provider resolution, command-line argument parsing, and the navigation/URL-allowlist logic that drives every provider's login flow. `npm run lint` runs ESLint and `npm run format` formats the codebase with Prettier. `npm run ci` performs syntax checks, lint, tests, and validates an unpacked application build.
+
+DevTools are disabled in production builds by default. To enable them during local development, pass `--devtools` or set `FORCE_DEVTOOLS=1`:
+
+```bash
+npm run dev -- --devtools
+```
 
 ## Build And Packaging
 
@@ -176,9 +185,9 @@ Packaging notes:
 
 ## Release Automation
 
-GitHub Actions validates pushes and pull requests with syntax checks, automated tests, and an unpacked build. Pull requests never publish releases.
+GitHub Actions validates pushes and pull requests with syntax checks, lint, automated tests, and an unpacked build across Node 18, 20, and 22. Pull requests never publish releases.
 
-Releases are triggered only by semantic version tags such as `v2.0.1`. The release workflow verifies that the tag matches the version in `package.json`, builds the AppImage, Debian package, and `tar.gz`, generates `SHA256SUMS.txt`, and attaches all four artifacts to the GitHub Release. Commit messages do not trigger releases.
+Releases are triggered only by semantic version tags such as `v2.0.2`. The release workflow verifies that the tag matches the version in `package.json`, builds the AppImage, Debian package, and `tar.gz` in a single pass, generates `SHA256SUMS.txt`, and attaches all four artifacts to the GitHub Release. Commit messages do not trigger releases.
 
 For Debian and Ubuntu, install the `.deb` package. On other Linux distributions, use the AppImage or extract the `tar.gz` archive.
 
@@ -223,11 +232,13 @@ Screenshots used for Flatpak/AppStream metadata live in [`flatpak/screenshots`](
 │   │   └── source/
 │   └── linux/
 ├── .github/
-│   └── workflows/
+│   ├── workflows/
+│   └── dependabot.yml
 ├── flatpak/
 ├── src/
-│   ├── main/
-│   └── preload/
+│   ├── main/        # index, apps, ipc, navigation, runtime-flags, templates, i18n
+│   ├── preload/     # self-contained sandboxed preload
+│   └── windows/     # HTML templates for the About and selector windows
 ├── test/
 ├── CHANGELOG.md
 ├── LICENSE

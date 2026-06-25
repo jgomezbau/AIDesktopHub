@@ -43,31 +43,19 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run syntax checks and tests
+      - name: Run syntax checks, lint, and tests
         run: |
           npm run check:syntax
+          npm run lint
           npm test
 
-      - name: Build Linux release artifacts
+      - name: Build all Linux release artifacts (AppImage + deb + tar.gz)
         shell: bash
         run: |
           set -euo pipefail
-          staging_dir="$RUNNER_TEMP/aidesktophub-release"
-          rm -rf "$staging_dir"
-          mkdir -p "$staging_dir"
-
-          npm run build:appimage -- --publish never
-          cp dist/*.AppImage "$staging_dir/"
-
-          npm run build:deb -- --publish never
-          cp dist/*.deb "$staging_dir/"
-
-          npx electron-builder --linux tar.gz --publish never
-          cp dist/*.tar.gz "$staging_dir/"
-
-          rm -rf dist
-          mkdir -p dist
-          cp "$staging_dir"/* dist/
+          npx electron-builder \
+            --linux AppImage deb tar.gz \
+            --publish never
 
       - name: Generate checksums
         shell: bash
@@ -84,21 +72,15 @@ jobs:
 
           ## Resumen
 
-          La versión ${GITHUB_REF_NAME} agrega una base de tests automatizados, integración continua con GitHub Actions y publicación automática de releases mediante tags semánticos. Esta automatización se incorpora en **v2.0.1**.
+          La versión ${GITHUB_REF_NAME} publica la versión declarada en **package.json** con validación automatizada, artefactos Linux y checksums reproducibles.
 
           ## Cambios principales
 
-          - Soporte para Gemini y Z.ai con sesiones y launchers independientes.
-          - Modo genérico con selector de asistentes y nueva ventana Acerca de.
-          - Tests automatizados con **node:test**.
-          - Script **npm test**.
-          - Script **npm run check:syntax**.
-          - Script **npm run ci**.
-          - Workflow CI para eventos **push** y **pull_request**.
-          - Workflow Release para tags **vX.Y.Z**.
-          - Validación de coincidencia entre el tag y la versión de **package.json**.
-          - Build automático de AppImage, **.deb** y **tar.gz**.
-          - Generación de **SHA256SUMS.txt**.
+          - Validación de coincidencia entre el tag **${GITHUB_REF_NAME}** y la versión de **package.json**.
+          - Comprobación de sintaxis, lint y tests antes de publicar.
+          - Build automático de AppImage, paquete **.deb** y archivo **tar.gz**.
+          - Generación de **SHA256SUMS.txt** para verificar la integridad de los artefactos.
+          - Consulta el changelog del repositorio para el detalle funcional completo de esta versión.
 
           ## Artefactos incluidos
 

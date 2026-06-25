@@ -1,0 +1,5 @@
+dist/
+node_modules/
+.flatpak-builder/
+flatpak/build-dir/
+package-lock.json

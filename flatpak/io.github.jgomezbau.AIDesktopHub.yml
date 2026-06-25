@@ -1,10 +1,10 @@
 app-id: io.github.jgomezbau.AIDesktopHub
 runtime: org.freedesktop.Platform
-runtime-version: "25.08"
+runtime-version: '25.08'
 sdk: org.freedesktop.Sdk
 command: AIDesktopHub
 base: org.electronjs.Electron2.BaseApp
-base-version: "25.08"
+base-version: '25.08'
 
 finish-args:
   - --share=network

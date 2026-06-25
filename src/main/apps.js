@@ -129,7 +129,9 @@ const APPS = Object.freeze({
 });
 
 function resolveAppId(input) {
-  const normalized = String(input || '').trim().toLowerCase();
+  const normalized = String(input || '')
+    .trim()
+    .toLowerCase();
   return Object.keys(APPS).find((appId) => appId.toLowerCase() === normalized) || null;
 }
 

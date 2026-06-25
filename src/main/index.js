@@ -5,6 +5,9 @@ const net = require('net');
 const { APPS, DEFAULT_APP_ID, parseArgs } = require('./apps');
 const { setupIPC } = require('./ipc');
 const { applyRuntimeFlags } = require('./runtime-flags');
+const navigation = require('./navigation');
+const { renderTemplate } = require('./templates');
+const { t } = require('./i18n');
 
 const cli = parseArgs(process.argv);
 const projectRoot = path.resolve(__dirname, '..', '..');
@@ -14,6 +17,25 @@ const brandingAppConfig = cli.explicitApp ? APPS[cli.appId] : APPS[DEFAULT_APP_I
 const genericSettingsDir = path.join(app.getPath('appData'), 'AIDesktopHub');
 const genericSettingsFile = path.join(genericSettingsDir, 'config.json');
 const NO_PARAM_MODE = !cli.explicitApp;
+
+/* DevTools are disabled in production builds unless explicitly requested via
+ * `--devtools` or FORCE_DEVTOOLS=1. This keeps them out of shipped binaries. */
+const DEV_TOOLS_ENABLED = cli.forceDevtools || process.env.FORCE_DEVTOOLS === '1';
+
+/* ─────────────────── Deterministic single-instance lock ports ────────────────
+ * Fixed port per provider avoids hash collisions between different providers
+ * that the previous hash-modulo approach could produce.
+ */
+const PROFILE_LOCK_PORTS = {
+  AIDesktopHub: 41000,
+  chatgpt: 41001,
+  claude: 41002,
+  gemini: 41003,
+  grok: 41004,
+  deepseek: 41005,
+  qwen: 41006,
+  zai: 41007
+};
 
 let activeAppConfig = cli.explicitApp ? APPS[cli.appId] : null;
 let isSwitchingProvider = false;
@@ -26,10 +48,7 @@ function ensureDir(dir) {
 }
 
 function resolveIconPath(iconName) {
-  const candidates = [
-    path.join(iconsRoot, iconName),
-    path.join(iconsRoot, 'aidesktophub.png')
-  ];
+  const candidates = [path.join(iconsRoot, iconName), path.join(iconsRoot, 'aidesktophub.png')];
 
   return candidates.find((candidate) => fs.existsSync(candidate)) || candidates[candidates.length - 1];
 }
@@ -94,16 +113,8 @@ function writeJsonFile(filePath, value) {
   fs.writeFileSync(filePath, JSON.stringify(value, null, 2));
 }
 
-function hashString(input) {
-  let hash = 0;
-  for (let i = 0; i < input.length; i += 1) {
-    hash = (hash * 31 + input.charCodeAt(i)) >>> 0;
-  }
-  return hash;
-}
-
 function profileLockPort(profileId) {
-  return 41000 + (hashString(`AIDesktopHub:${profileId}`) % 2000);
+  return PROFILE_LOCK_PORTS[profileId] || PROFILE_LOCK_PORTS.AIDesktopHub;
 }
 
 function getActiveAppConfig() {
@@ -148,80 +159,41 @@ function persistLastProviderForGenericMode(appId) {
   });
 }
 
+const providerIconDataUrlCache = new Map();
+
 function getProviderState() {
   return {
     enabled: NO_PARAM_MODE && !!activeAppConfig,
     currentProviderId: activeAppConfig?.id || null,
     providers: getSupportedProviders().map((provider) => {
-      const iconPath = resolveIconPath(provider.icon);
-      const iconBuffer = fs.readFileSync(iconPath);
+      let iconDataUrl = providerIconDataUrlCache.get(provider.id);
+      if (!iconDataUrl) {
+        const iconPath = resolveIconPath(provider.icon);
+        const iconBuffer = fs.readFileSync(iconPath);
+        iconDataUrl = `data:image/png;base64,${iconBuffer.toString('base64')}`;
+        providerIconDataUrlCache.set(provider.id, iconDataUrl);
+      }
       return {
         id: provider.id,
         name: provider.name,
-        iconDataUrl: `data:image/png;base64,${iconBuffer.toString('base64')}`
+        iconDataUrl
       };
     })
   };
 }
 
-function hostnameOf(targetUrl) {
-  try {
-    return new URL(targetUrl).hostname.toLowerCase();
-  } catch {
-    return '';
-  }
-}
-
-function originOf(targetUrl) {
-  try {
-    return new URL(targetUrl).origin;
-  } catch {
-    return '';
-  }
-}
-
-function matchesAllowed(url, rules) {
-  const hostname = hostnameOf(url);
-  if (!hostname) return false;
-
-  return rules.some((rule) => {
-    if (rule instanceof RegExp) return rule.test(hostname);
-    const value = String(rule).toLowerCase();
-    return hostname === value || hostname.endsWith(`.${value}`) || hostname.includes(value);
-  });
-}
+const { matchesAllowed } = navigation;
 
 function isBaseAppUrl(url) {
-  return originOf(url) === originOf(getActiveAppConfig().url);
+  return navigation.isBaseAppUrl(url, getActiveAppConfig().url);
 }
 
 function isGeminiInternalUrl(url) {
-  if (getActiveAppConfig().id !== 'gemini') return false;
-
-  const hostname = hostnameOf(url);
-  if (!hostname) return false;
-
-  return (
-    hostname === 'gemini.google.com' ||
-    hostname.endsWith('.gemini.google.com') ||
-    hostname === 'accounts.google.com' ||
-    hostname.endsWith('.accounts.google.com') ||
-    hostname === 'consent.google.com' ||
-    hostname.endsWith('.consent.google.com') ||
-    hostname === 'ogs.google.com' ||
-    hostname.endsWith('.ogs.google.com') ||
-    hostname === 'myaccount.google.com' ||
-    hostname.endsWith('.myaccount.google.com') ||
-    hostname === 'www.google.com' ||
-    hostname.endsWith('.www.google.com') ||
-    hostname === 'google.com' ||
-    hostname.endsWith('.google.com')
-  );
+  return navigation.isGeminiInternalUrl(url, getActiveAppConfig().id);
 }
 
-const desktopBaseName = brandingAppConfig.id === DEFAULT_APP_ID
-  ? 'AIDesktopHub'
-  : `AIDesktopHub-${brandingAppConfig.id}`;
+const desktopBaseName =
+  brandingAppConfig.id === DEFAULT_APP_ID ? 'AIDesktopHub' : `AIDesktopHub-${brandingAppConfig.id}`;
 app.setName(desktopBaseName);
 app.setDesktopName(`${desktopBaseName}.desktop`);
 ensureDir(getUserDataPath());
@@ -286,15 +258,15 @@ function getSession() {
 
 function buildContextMenu(params) {
   return Menu.buildFromTemplate([
-    { label: 'Cortar', role: 'cut', enabled: params.isEditable && params.editFlags.canCut },
-    { label: 'Copiar', role: 'copy', enabled: params.editFlags.canCopy || !!params.selectionText?.trim() },
-    { label: 'Pegar', role: 'paste', enabled: params.isEditable && params.editFlags.canPaste },
-    { label: 'Seleccionar todo', role: 'selectAll', enabled: params.editFlags.canSelectAll },
+    { label: t('edit.cut'), role: 'cut', enabled: params.isEditable && params.editFlags.canCut },
+    { label: t('edit.copy'), role: 'copy', enabled: params.editFlags.canCopy || !!params.selectionText?.trim() },
+    { label: t('edit.paste'), role: 'paste', enabled: params.isEditable && params.editFlags.canPaste },
+    { label: t('edit.selectAll'), role: 'selectAll', enabled: params.editFlags.canSelectAll },
     { type: 'separator' },
-    { label: 'Recargar', click: () => mainWindow?.reload() },
-    { label: 'Imprimir', click: () => mainWindow?.webContents.print() },
+    { label: t('app.reload'), click: () => mainWindow?.reload() },
+    { label: t('app.print'), click: () => mainWindow?.webContents.print() },
     {
-      label: 'Inspeccionar',
+      label: t('app.inspect'),
       click: () => {
         if (!mainWindow || mainWindow.isDestroyed()) return;
         mainWindow.webContents.inspectElement(params.x, params.y);
@@ -304,42 +276,49 @@ function buildContextMenu(params) {
 }
 
 function buildAppMenu() {
-  return Menu.buildFromTemplate([
+  const appSubmenu = [
+    { label: t('app.reload'), accelerator: 'CmdOrCtrl+R', click: () => mainWindow?.reload() },
+    ...(DEV_TOOLS_ENABLED
+      ? [
+          {
+            label: t('app.openDevTools'),
+            accelerator: 'CmdOrCtrl+Shift+D',
+            click: () => mainWindow?.webContents.openDevTools()
+          }
+        ]
+      : []),
     {
-      label: 'Aplicación',
-      submenu: [
-        { label: 'Recargar', accelerator: 'CmdOrCtrl+R', click: () => mainWindow?.reload() },
-        { label: 'Abrir DevTools', accelerator: 'CmdOrCtrl+Shift+D', click: () => mainWindow?.webContents.openDevTools() },
-        {
-          label: 'Limpiar caché de esta app',
-          click: async () => {
-            const ses = getSession();
-            await ses.clearCache();
-            await ses.clearStorageData();
-            mainWindow?.reload();
-          }
-        },
-        { type: 'separator' },
-        {
-          label: 'Salir',
-          accelerator: 'CmdOrCtrl+Q',
-          click: () => {
-            isQuitting = true;
-            app.quit();
-          }
-        }
-      ]
+      label: t('app.clearCache'),
+      click: async () => {
+        const ses = getSession();
+        await ses.clearCache();
+        await ses.clearStorageData();
+        mainWindow?.reload();
+      }
     },
+    { type: 'separator' },
     {
-      label: 'Edición',
+      label: t('tray.quit'),
+      accelerator: 'CmdOrCtrl+Q',
+      click: () => {
+        isQuitting = true;
+        app.quit();
+      }
+    }
+  ];
+
+  return Menu.buildFromTemplate([
+    { label: t('app.menu'), submenu: appSubmenu },
+    {
+      label: t('edit.menu'),
       submenu: [
-        { label: 'Deshacer', role: 'undo' },
-        { label: 'Rehacer', role: 'redo' },
+        { label: t('edit.undo'), role: 'undo' },
+        { label: t('edit.redo'), role: 'redo' },
         { type: 'separator' },
-        { label: 'Cortar', role: 'cut' },
-        { label: 'Copiar', role: 'copy' },
-        { label: 'Pegar', role: 'paste' },
-        { label: 'Seleccionar todo', role: 'selectAll' }
+        { label: t('edit.cut'), role: 'cut' },
+        { label: t('edit.copy'), role: 'copy' },
+        { label: t('edit.paste'), role: 'paste' },
+        { label: t('edit.selectAll'), role: 'selectAll' }
       ]
     }
   ]);
@@ -349,146 +328,25 @@ function buildAboutHtml() {
   const iconPath = resolveIconPath('providers/aidesktophub.png');
   const iconDataUrl = `data:image/png;base64,${fs.readFileSync(iconPath).toString('base64')}`;
   const activeAssistant = activeAppConfig?.name || 'Selector de asistentes';
-  const supportedAssistants = getSupportedProviders().map(({ name }) => name).join(' · ');
+  const supportedAssistants = getSupportedProviders()
+    .map(({ name }) => name)
+    .join(' · ');
 
-  return `<!doctype html>
-  <html lang="es">
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline';">
-      <title>Acerca de AI Desktop Hub</title>
-      <style>
-        :root { color-scheme: dark; }
-        * { box-sizing: border-box; }
-        body {
-          margin: 0;
-          min-height: 100vh;
-          display: grid;
-          place-items: center;
-          padding: 24px;
-          font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-          color: #e7edf7;
-          background:
-            radial-gradient(circle at 15% 0%, rgba(50, 125, 255, 0.28), transparent 38%),
-            radial-gradient(circle at 100% 90%, rgba(122, 82, 255, 0.22), transparent 36%),
-            linear-gradient(145deg, #0a1020, #10182a 55%, #0b1220);
-        }
-        .card {
-          width: min(100%, 620px);
-          overflow: hidden;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 24px;
-          background: rgba(15, 23, 42, 0.82);
-          box-shadow: 0 28px 80px rgba(0, 0, 0, 0.42);
-          backdrop-filter: blur(18px);
-        }
-        .hero {
-          display: flex;
-          align-items: center;
-          gap: 18px;
-          padding: 28px 30px 22px;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        .logo {
-          width: 78px;
-          height: 78px;
-          flex: none;
-          object-fit: contain;
-          filter: drop-shadow(0 10px 20px rgba(30, 100, 255, 0.28));
-        }
-        h1 { margin: 0 0 5px; font-size: 27px; letter-spacing: -0.03em; }
-        .version { color: #8eb6ff; font-size: 14px; font-weight: 700; }
-        .tagline { margin: 7px 0 0; color: #aab6ca; font-size: 14px; line-height: 1.45; }
-        .content { padding: 22px 30px 26px; }
-        .status {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 16px;
-          margin-bottom: 20px;
-          padding: 12px 15px;
-          border-radius: 14px;
-          background: rgba(72, 119, 255, 0.1);
-          border: 1px solid rgba(107, 148, 255, 0.17);
-        }
-        .status-label { color: #9eabc0; font-size: 12px; }
-        .status-value { color: #dce7ff; font-size: 13px; font-weight: 700; text-align: right; }
-        .versions {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 10px;
-        }
-        .item {
-          padding: 12px 14px;
-          border-radius: 13px;
-          background: rgba(255, 255, 255, 0.045);
-          border: 1px solid rgba(255, 255, 255, 0.065);
-        }
-        .item span { display: block; color: #8f9bb0; font-size: 11px; margin-bottom: 4px; }
-        .item strong { font-size: 14px; font-weight: 650; }
-        .assistants { margin: 20px 0 0; color: #8f9bb0; font-size: 12px; line-height: 1.6; }
-        .assistants strong { color: #cdd7e8; }
-        .footer {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 14px;
-          margin-top: 22px;
-          padding-top: 18px;
-          border-top: 1px solid rgba(255, 255, 255, 0.08);
-          color: #7f8ba0;
-          font-size: 12px;
-        }
-        a {
-          padding: 9px 13px;
-          border-radius: 11px;
-          color: #dce8ff;
-          text-decoration: none;
-          font-weight: 700;
-          background: linear-gradient(135deg, #315fc7, #6747c7);
-          box-shadow: 0 8px 22px rgba(50, 85, 190, 0.25);
-        }
-        a:hover { filter: brightness(1.12); }
-        @media (max-width: 520px) {
-          body { padding: 12px; }
-          .hero, .content { padding-left: 20px; padding-right: 20px; }
-          .versions { grid-template-columns: 1fr; }
-        }
-      </style>
-    </head>
-    <body>
-      <main class="card">
-        <header class="hero">
-          <img class="logo" src="${iconDataUrl}" alt="AI Desktop Hub">
-          <div>
-            <h1>AI Desktop Hub</h1>
-            <div class="version">Versión ${app.getVersion()}</div>
-            <p class="tagline">Tus asistentes de IA favoritos, integrados en un escritorio Linux con sesiones independientes.</p>
-          </div>
-        </header>
-        <section class="content">
-          <div class="status">
-            <span class="status-label">Asistente activo</span>
-            <span class="status-value">${activeAssistant}</span>
-          </div>
-          <div class="versions">
-            <div class="item"><span>Electron</span><strong>${process.versions.electron}</strong></div>
-            <div class="item"><span>Chromium</span><strong>${process.versions.chrome}</strong></div>
-            <div class="item"><span>Node.js</span><strong>${process.versions.node}</strong></div>
-            <div class="item"><span>V8</span><strong>${process.versions.v8}</strong></div>
-            <div class="item"><span>Plataforma</span><strong>${process.platform} · ${process.arch}</strong></div>
-            <div class="item"><span>Licencia</span><strong>MIT</strong></div>
-          </div>
-          <p class="assistants"><strong>Asistentes soportados:</strong><br>${supportedAssistants}</p>
-          <footer class="footer">
-            <span>Proyecto independiente y no oficial.</span>
-            <a href="https://github.com/jgomezbau/AIDesktopHub" target="_blank" rel="noreferrer">Ver proyecto</a>
-          </footer>
-        </section>
-      </main>
-    </body>
-  </html>`;
+  return renderTemplate(
+    'about.html',
+    {
+      iconDataUrl,
+      appVersion: app.getVersion(),
+      activeAssistant,
+      electronVersion: process.versions.electron,
+      chromeVersion: process.versions.chrome,
+      nodeVersion: process.versions.node,
+      v8Version: process.versions.v8,
+      platform: `${process.platform} · ${process.arch}`,
+      supportedAssistants
+    },
+    ['iconDataUrl', 'supportedAssistants']
+  );
 }
 
 function showAboutWindow() {
@@ -506,7 +364,7 @@ function showAboutWindow() {
     minHeight: 560,
     show: false,
     autoHideMenuBar: true,
-    title: 'Acerca de AI Desktop Hub',
+    title: t('windows.aboutTitle'),
     icon: resolveIconPath('providers/aidesktophub.png'),
     backgroundColor: '#0a1020',
     webPreferences: {
@@ -542,6 +400,20 @@ function showAboutWindow() {
   aboutWindow.loadURL(`data:text/html;charset=UTF-8,${encodeURIComponent(buildAboutHtml())}`);
 }
 
+/**
+ * Toggles visibility of the selector window if it's showing, otherwise the main
+ * window. Shared by the tray click handler and the "Mostrar/Ocultar" menu entry.
+ */
+function toggleVisibleWindow() {
+  if (selectorWindow && !selectorWindow.isDestroyed() && selectorWindow.isVisible()) {
+    selectorWindow.hide();
+    return;
+  }
+
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  mainWindow.isVisible() ? mainWindow.hide() : focusMainWindow();
+}
+
 function createTray() {
   if (tray) return;
 
@@ -556,71 +428,55 @@ function createTray() {
     const currentAssistantId = getActiveAppConfig().id;
 
     return getSupportedProviders().map((provider) => ({
-        label: provider.name,
-        type: 'radio',
-        checked: provider.id === currentAssistantId,
-        icon: getAssistantMenuIcon(provider.icon),
-        click: () => {
-          if (provider.id !== currentAssistantId) {
-            switchProviderInMainWindow(provider.id);
-          }
+      label: provider.name,
+      type: 'radio',
+      checked: provider.id === currentAssistantId,
+      icon: getAssistantMenuIcon(provider.icon),
+      click: () => {
+        if (provider.id !== currentAssistantId) {
+          switchProviderInMainWindow(provider.id);
         }
-      }));
+      }
+    }));
   }
 
   function refreshTrayMenu() {
-    tray.setContextMenu(Menu.buildFromTemplate([
-      ...(NO_PARAM_MODE
+    tray.setContextMenu(
+      Menu.buildFromTemplate([
+        ...(NO_PARAM_MODE
           ? [
-            {
-              label: 'Elegi un Asistente',
-              submenu: buildAssistantsSubmenu()
-            },
-            { type: 'separator' }
-          ]
-        : []),
-      {
-        label: `Mostrar/Ocultar ${brandingAppConfig.name}`,
-        click: () => {
-          if (selectorWindow && !selectorWindow.isDestroyed() && selectorWindow.isVisible()) {
-            selectorWindow.isVisible() ? selectorWindow.hide() : selectorWindow.show();
-            selectorWindow.focus();
-            return;
+              {
+                label: t('windows.selectorHeading'),
+                submenu: buildAssistantsSubmenu()
+              },
+              { type: 'separator' }
+            ]
+          : []),
+        {
+          label: `${t('tray.showHide')} ${brandingAppConfig.name}`,
+          click: () => toggleVisibleWindow()
+        },
+        { type: 'separator' },
+        {
+          label: t('windows.aboutTitle'),
+          click: showAboutWindow
+        },
+        { type: 'separator' },
+        {
+          label: t('tray.quit'),
+          click: () => {
+            isQuitting = true;
+            app.quit();
           }
-
-          if (!mainWindow || mainWindow.isDestroyed()) return;
-          mainWindow.isVisible() ? mainWindow.hide() : focusMainWindow();
         }
-      },
-      { type: 'separator' },
-      {
-        label: 'Acerca de AI Desktop Hub',
-        click: showAboutWindow
-      },
-      { type: 'separator' },
-      {
-        label: 'Salir',
-        click: () => {
-          isQuitting = true;
-          app.quit();
-        }
-      }
-    ]));
+      ])
+    );
   }
 
   tray.setToolTip(brandingAppConfig.name);
   refreshTrayMenu();
 
-  tray.on('click', () => {
-    if (selectorWindow && !selectorWindow.isDestroyed() && selectorWindow.isVisible()) {
-      selectorWindow.isVisible() ? selectorWindow.hide() : selectorWindow.show();
-      selectorWindow.focus();
-      return;
-    }
-
-    if (!mainWindow || mainWindow.isDestroyed()) return;
-    mainWindow.isVisible() ? mainWindow.hide() : focusMainWindow();
-  });
+  tray.on('click', () => toggleVisibleWindow());
 
   tray.refreshMenu = refreshTrayMenu;
 }
@@ -647,8 +503,8 @@ function createLoginWindow(targetUrl) {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      devTools: true,
-      sandbox: false,
+      devTools: DEV_TOOLS_ENABLED,
+      sandbox: true,
       webSecurity: true,
       spellcheck: false,
       partition: partitionName
@@ -684,21 +540,7 @@ function shouldStayInsideApp(url) {
 }
 
 function isClaudeAuthPopup(url) {
-  if (getActiveAppConfig().id !== 'claude') return false;
-
-  const lowerUrl = String(url).toLowerCase();
-  const hostname = hostnameOf(url);
-
-  return (
-    hostname.includes('accounts.google.com') ||
-    hostname.includes('login.microsoftonline.com') ||
-    hostname.includes('login.live.com') ||
-    hostname.includes('appleid.apple.com') ||
-    lowerUrl.includes('oauth') ||
-    lowerUrl.includes('signin') ||
-    lowerUrl.includes('login') ||
-    lowerUrl.includes('auth')
-  );
+  return navigation.isClaudeAuthPopup(url, getActiveAppConfig().id);
 }
 
 function shouldUseLoginWindow(url) {
@@ -714,107 +556,30 @@ function shouldUseLoginWindow(url) {
 }
 
 function buildProviderSelectorHtml() {
-  const providers = getSupportedProviders();
-  const cards = providers.map((provider) => {
-    const iconPath = resolveIconPath(provider.icon);
-    const iconBuffer = fs.readFileSync(iconPath);
-    const iconUrl = `data:image/png;base64,${iconBuffer.toString('base64')}`;
-    return `
+  const cards = getSupportedProviders()
+    .map((provider) => {
+      const iconPath = resolveIconPath(provider.icon);
+      const iconBuffer = fs.readFileSync(iconPath);
+      const iconUrl = `data:image/png;base64,${iconBuffer.toString('base64')}`;
+      return `
       <a class="provider-card" href="${SELECTOR_PROTOCOL}${provider.id}">
         <img src="${iconUrl}" alt="${provider.name}" class="provider-icon">
         <span class="provider-name">${provider.name}</span>
       </a>
     `;
-  }).join('');
+    })
+    .join('');
 
-  return `<!DOCTYPE html>
-  <html lang="es">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>AI Desktop Hub</title>
-      <style>
-        :root {
-          color-scheme: light;
-          font-family: "Noto Sans", "Segoe UI", sans-serif;
-        }
-        * { box-sizing: border-box; }
-        body {
-          margin: 0;
-          min-height: 100vh;
-          display: grid;
-          place-items: center;
-          background:
-            radial-gradient(circle at top, rgba(34, 197, 94, 0.18), transparent 36%),
-            linear-gradient(145deg, #f6f7fb 0%, #eef2f7 50%, #e8edf4 100%);
-          color: #162032;
-        }
-        .panel {
-          width: min(560px, calc(100vw - 32px));
-          padding: 28px;
-          border-radius: 24px;
-          background: rgba(255, 255, 255, 0.95);
-          box-shadow: 0 24px 80px rgba(15, 23, 42, 0.18);
-          border: 1px solid rgba(148, 163, 184, 0.22);
-        }
-        h1 {
-          margin: 0 0 8px;
-          font-size: 28px;
-          text-align: center;
-        }
-        p {
-          margin: 0 0 22px;
-          line-height: 1.5;
-          color: #475569;
-          text-align: center;
-        }
-        .providers {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 14px;
-        }
-        .provider-card {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 14px 16px;
-          border-radius: 16px;
-          text-decoration: none;
-          color: inherit;
-          background: #f8fafc;
-          border: 1px solid #dbe3ef;
-          transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-        }
-        .provider-card:hover {
-          transform: translateY(-1px);
-          border-color: #94a3b8;
-          box-shadow: 0 14px 32px rgba(15, 23, 42, 0.12);
-        }
-        .provider-icon {
-          width: 36px;
-          height: 36px;
-          object-fit: contain;
-          flex: none;
-        }
-        .provider-name {
-          font-size: 16px;
-          font-weight: 600;
-        }
-        @media (max-width: 540px) {
-          .providers { grid-template-columns: 1fr; }
-        }
-      </style>
-    </head>
-    <body>
-      <main class="panel">
-        <h1>Elegi un Asistente</h1>
-        <p>Elegí el asistente que quieras usar. Más adelante podrás cambiarlo desde el tray de AI Desktop Hub.</p>
-        <section class="providers">
-          ${cards}
-        </section>
-      </main>
-    </body>
-  </html>`;
+  return renderTemplate(
+    'selector.html',
+    {
+      cards,
+      title: t('windows.selectorTitle'),
+      heading: t('windows.selectorHeading'),
+      body: t('windows.selectorBody')
+    },
+    ['cards']
+  );
 }
 
 function createSelectorWindow() {
@@ -838,7 +603,7 @@ function createSelectorWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      sandbox: false
+      sandbox: true
     }
   });
 
@@ -906,12 +671,13 @@ function switchProviderInMainWindow(appId) {
   persistLastProviderForGenericMode(appId);
 
   const previousWindow = mainWindow;
-  const windowState = previousWindow && !previousWindow.isDestroyed()
-    ? {
-        bounds: previousWindow.getBounds(),
-        isMaximized: previousWindow.isMaximized()
-      }
-    : null;
+  const windowState =
+    previousWindow && !previousWindow.isDestroyed()
+      ? {
+          bounds: previousWindow.getBounds(),
+          isMaximized: previousWindow.isMaximized()
+        }
+      : null;
 
   if (loginWindow && !loginWindow.isDestroyed()) {
     loginWindow.destroy();
@@ -951,12 +717,11 @@ function createWindow(windowState = null) {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(projectRoot, 'src', 'preload', 'preload.js'),
-      devTools: true,
+      devTools: DEV_TOOLS_ENABLED,
       spellcheck: false,
       backgroundThrottling: false,
       enableWebSQL: false,
-      enableRemoteModule: false,
-      sandbox: false,
+      sandbox: true,
       webSecurity: true,
       partition: partitionName
     }
@@ -967,11 +732,7 @@ function createWindow(windowState = null) {
   const ses = getSession();
 
   ses.setPermissionRequestHandler((_wc, permission, callback) => {
-    const allowedPermissions = new Set([
-      'media',
-      'clipboard-read',
-      'clipboard-sanitized-write'
-    ]);
+    const allowedPermissions = new Set(['media', 'clipboard-read', 'clipboard-sanitized-write']);
     callback(allowedPermissions.has(permission));
   });
 
@@ -1015,8 +776,8 @@ function createWindow(windowState = null) {
           webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
-            devTools: true,
-            sandbox: false,
+            devTools: DEV_TOOLS_ENABLED,
+            sandbox: true,
             webSecurity: true,
             spellcheck: false,
             partition: partitionName
@@ -1091,7 +852,7 @@ function createWindow(windowState = null) {
 
     windowRef.show();
 
-    if (process.env.FORCE_DEVTOOLS === '1' || cli.forceDevtools) {
+    if (DEV_TOOLS_ENABLED) {
       windowRef.webContents.openDevTools({ mode: 'right' });
     }
   });
@@ -1108,7 +869,7 @@ if (NO_PARAM_MODE) {
   }
 }
 
-setupIPC();
+setupIPC({ getProviderState });
 acquireProfileLock();
 
 app.on('certificate-error', (event, _webContents, _url, _error, _certificate, callback) => {

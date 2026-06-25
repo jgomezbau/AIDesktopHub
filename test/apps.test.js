@@ -3,12 +3,7 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 
-const {
-  APPS,
-  DEFAULT_APP_ID,
-  parseArgs,
-  resolveAppId
-} = require('../src/main/apps');
+const { APPS, DEFAULT_APP_ID, parseArgs, resolveAppId } = require('../src/main/apps');
 
 test('resolveAppId resolves every registered provider case-insensitively', () => {
   for (const appId of Object.keys(APPS)) {

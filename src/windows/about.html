@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; img-src data:; style-src 'unsafe-inline';"
+    />
+    <title>Acerca de AI Desktop Hub</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          sans-serif;
+        color: #e7edf7;
+        background:
+          radial-gradient(circle at 15% 0%, rgba(50, 125, 255, 0.28), transparent 38%),
+          radial-gradient(circle at 100% 90%, rgba(122, 82, 255, 0.22), transparent 36%),
+          linear-gradient(145deg, #0a1020, #10182a 55%, #0b1220);
+      }
+      .card {
+        width: min(100%, 620px);
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        background: rgba(15, 23, 42, 0.82);
+        box-shadow: 0 28px 80px rgba(0, 0, 0, 0.42);
+        backdrop-filter: blur(18px);
+      }
+      .hero {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        padding: 28px 30px 22px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .logo {
+        width: 78px;
+        height: 78px;
+        flex: none;
+        object-fit: contain;
+        filter: drop-shadow(0 10px 20px rgba(30, 100, 255, 0.28));
+      }
+      h1 {
+        margin: 0 0 5px;
+        font-size: 27px;
+        letter-spacing: -0.03em;
+      }
+      .version {
+        color: #8eb6ff;
+        font-size: 14px;
+        font-weight: 700;
+      }
+      .tagline {
+        margin: 7px 0 0;
+        color: #aab6ca;
+        font-size: 14px;
+        line-height: 1.45;
+      }
+      .content {
+        padding: 22px 30px 26px;
+      }
+      .status {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 20px;
+        padding: 12px 15px;
+        border-radius: 14px;
+        background: rgba(72, 119, 255, 0.1);
+        border: 1px solid rgba(107, 148, 255, 0.17);
+      }
+      .status-label {
+        color: #9eabc0;
+        font-size: 12px;
+      }
+      .status-value {
+        color: #dce7ff;
+        font-size: 13px;
+        font-weight: 700;
+        text-align: right;
+      }
+      .versions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .item {
+        padding: 12px 14px;
+        border-radius: 13px;
+        background: rgba(255, 255, 255, 0.045);
+        border: 1px solid rgba(255, 255, 255, 0.065);
+      }
+      .item span {
+        display: block;
+        color: #8f9bb0;
+        font-size: 11px;
+        margin-bottom: 4px;
+      }
+      .item strong {
+        font-size: 14px;
+        font-weight: 650;
+      }
+      .assistants {
+        margin: 20px 0 0;
+        color: #8f9bb0;
+        font-size: 12px;
+        line-height: 1.6;
+      }
+      .assistants strong {
+        color: #cdd7e8;
+      }
+      .footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        margin-top: 22px;
+        padding-top: 18px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        color: #7f8ba0;
+        font-size: 12px;
+      }
+      a {
+        padding: 9px 13px;
+        border-radius: 11px;
+        color: #dce8ff;
+        text-decoration: none;
+        font-weight: 700;
+        background: linear-gradient(135deg, #315fc7, #6747c7);
+        box-shadow: 0 8px 22px rgba(50, 85, 190, 0.25);
+      }
+      a:hover {
+        filter: brightness(1.12);
+      }
+      @media (max-width: 520px) {
+        body {
+          padding: 12px;
+        }
+        .hero,
+        .content {
+          padding-left: 20px;
+          padding-right: 20px;
+        }
+        .versions {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <header class="hero">
+        <img class="logo" src="{{iconDataUrl}}" alt="AI Desktop Hub" />
+        <div>
+          <h1>AI Desktop Hub</h1>
+          <div class="version">Versión {{appVersion}}</div>
+          <p class="tagline">
+            Tus asistentes de IA favoritos, integrados en un escritorio Linux con sesiones independientes.
+          </p>
+        </div>
+      </header>
+      <section class="content">
+        <div class="status">
+          <span class="status-label">Asistente activo</span>
+          <span class="status-value">{{activeAssistant}}</span>
+        </div>
+        <div class="versions">
+          <div class="item"><span>Electron</span><strong>{{electronVersion}}</strong></div>
+          <div class="item"><span>Chromium</span><strong>{{chromeVersion}}</strong></div>
+          <div class="item"><span>Node.js</span><strong>{{nodeVersion}}</strong></div>
+          <div class="item"><span>V8</span><strong>{{v8Version}}</strong></div>
+          <div class="item"><span>Plataforma</span><strong>{{platform}}</strong></div>
+          <div class="item"><span>Licencia</span><strong>MIT</strong></div>
+        </div>
+        <p class="assistants"><strong>Asistentes soportados:</strong><br />{{supportedAssistants}}</p>
+        <footer class="footer">
+          <span>Proyecto independiente y no oficial.</span>
+          <a href="https://github.com/jgomezbau/AIDesktopHub" target="_blank" rel="noreferrer">Ver proyecto</a>
+        </footer>
+      </section>
+    </main>
+  </body>
+</html>

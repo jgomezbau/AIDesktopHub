@@ -1,0 +1,29 @@
+version: 2
+updates:
+  # Keep Electron and electron-builder patched. Electron ships frequent
+  # Chromium/V8 security updates that matter for a desktop wrapper.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    allow:
+      - dependency-name: electron
+      - dependency-name: electron-builder
+      - dependency-name: eslint
+      - dependency-name: prettier
+    labels:
+      - dependencies
+      - security
+    commit-message:
+      prefix: deps
+
+  # Keep GitHub Actions versions current.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    labels:
+      - dependencies
+    commit-message:
+      prefix: ci

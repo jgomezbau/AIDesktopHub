@@ -1,6 +1,6 @@
 {
   "name": "aidesktophub",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Linux desktop wrapper for ChatGPT, Claude, Gemini, Grok, DeepSeek, Qwen, and Z.ai",
   "homepage": "https://github.com/jgomezbau/AIDesktopHub",
   "author": "Juan Bau <jgomezbau@gmail.com>",
@@ -18,8 +18,11 @@
   },
   "scripts": {
     "test": "node --test",
-    "check:syntax": "node -c src/main/apps.js && node -c src/main/index.js && node -c src/main/ipc.js && node -c src/main/runtime-flags.js && node -c src/preload/preload.js && node -c src/preload/clipboard-fix.js && node -c src/preload/inject-styles.js",
-    "ci": "npm run check:syntax && npm test && npm run build:dir",
+    "check:syntax": "node -c src/main/apps.js && node -c src/main/index.js && node -c src/main/ipc.js && node -c src/main/i18n.js && node -c src/main/runtime-flags.js && node -c src/main/navigation.js && node -c src/main/templates.js && node -c src/preload/preload.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "ci": "npm run check:syntax && npm run lint && npm test && npm run build:dir",
     "start": "electron .",
     "start:chatgpt": "electron . --app=chatgpt",
     "start:claude": "electron . --app=claude",
@@ -87,10 +90,9 @@
       "synopsis": "Linux desktop wrapper for AI web apps",
       "description": "Desktop wrapper for ChatGPT, Claude, Gemini, Grok, DeepSeek, Qwen, and Z.ai with isolated sessions per provider.",
       "desktop": {
-        "Name": "AI Desktop Hub",
-        "Comment": "Desktop hub for AI assistants on Linux",
-        "Categories": "Utility;Network;Chat;",
-        "StartupWMClass": "AIDesktopHub"
+        "entry": {
+          "StartupWMClass": "AIDesktopHub"
+        }
       },
       "artifactName": "${productName}-${version}-${arch}.${ext}",
       "icon": "icons/aidesktophub.png"
@@ -111,7 +113,11 @@
   },
   "devDependencies": {
     "electron": "41.1.0",
-    "electron-builder": "24.13.3"
+    "electron-builder": "^26.0.0",
+    "eslint": "^9.14.0",
+    "@eslint/js": "^9.14.0",
+    "globals": "^15.12.0",
+    "prettier": "^3.4.0"
   },
   "license": "MIT"
 }

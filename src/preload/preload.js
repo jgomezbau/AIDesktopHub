@@ -1,27 +1,178 @@
 // File: src/preload/preload.js
+// Self-contained preload: no local require() so we can run with sandbox: true.
+// Clipboard, style, and string helpers are inlined here for sandbox compatibility.
 const { contextBridge, ipcRenderer, clipboard } = require('electron');
-const { findCopyButtonFromEventTarget, getCodeTextFromButton } = require('./clipboard-fix');
-const { clipboardStyles } = require('./inject-styles');
 
-function showNotification(message, isError = false) {
-  if (process.env.NODE_ENV !== 'development' || isError) {
-    const notification = document.createElement('div');
-    notification.className = `notification ${isError ? 'error' : 'success'}`;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-    setTimeout(() => notification.remove(), 2500);
+/* ───────────────────────────── Strings (i18n) ──────────────────────────────
+ * Centralized user-facing strings. Swapping this object is all that's needed
+ * to translate the injected UI.
+ */
+const STRINGS = {
+  copiedToClipboard: 'Copiado al portapapeles',
+  copyError: 'Error al copiar',
+  readClipboardError: 'Error al leer del portapapeles'
+};
+
+/* ───────────────────────────── Clipboard styles ───────────────────────────── */
+const clipboardStyles = `
+[aria-label="Copy code"],
+.copy-button,
+.code-block-copy-button,
+[data-testid="copy-code-button"],
+button[class*="copy"],
+div[class*="copyButton"] {
+  position: relative;
+  z-index: 10 !important;
+  cursor: pointer !important;
+}
+
+[aria-label="Copy code"].copied:after,
+.copy-button.copied:after,
+.code-block-copy-button.copied:after,
+[data-testid="copy-code-button"].copied:after,
+button[class*="copy"].copied:after,
+div[class*="copyButton"].copied:after {
+  content: "Copiado!";
+  position: absolute;
+  right: 100%;
+  top: 0;
+  background: #10a37f;
+  color: white;
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  margin-right: 8px;
+  opacity: 1;
+  animation: ccFadeIn 0.3s, ccFadeOut 0.5s 1s forwards;
+}
+
+@keyframes ccFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ccFadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+.relative pre,
+.relative code,
+pre, code {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
+
+[aria-label="Copy code"]:hover,
+.copy-button:hover,
+.code-block-copy-button:hover,
+[data-testid="copy-code-button"]:hover,
+button[class*="copy"]:hover,
+div[class*="copyButton"]:hover {
+  opacity: 1 !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* ── RENDIMIENTO PARA CHATS LARGOS ──
+ * content-visibility: auto omite layout+paint de mensajes fuera del viewport.
+ */
+article[data-testid^="conversation-turn"],
+[data-testid^="conversation-turn"],
+.font-claude-message,
+[data-testid="conversation"] > *,
+main article,
+.message,
+[class*="message-row"],
+[class*="chat-message"] {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 1000px;
+}
+
+html, body { overflow-anchor: none !important; }
+
+header *, nav *, aside * {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Aislamiento del área de input para tipeo fluido con DOM grande */
+main > div:first-of-type,
+[class*="conversation-list"],
+[class*="messages-container"],
+[class*="chat-list"],
+[role="presentation"] > div {
+  contain: layout style;
+  will-change: scroll-position;
+}
+
+[data-testid="composer-footer"],
+[data-testid="send-button-container"],
+form:has(textarea),
+.stretch,
+div:has(> #prompt-textarea),
+div:has(> textarea) {
+  contain: layout style;
+  isolation: isolate;
+}
+
+#prompt-textarea,
+textarea[data-id],
+textarea[placeholder*="Message"],
+textarea[placeholder*="mensaje"],
+textarea[placeholder*="Ask"],
+textarea[placeholder*="Pregunta"] {
+  will-change: contents;
+  contain: layout style;
+}
+`;
+
+/* ───────────────────────────── Copy-button helpers ────────────────────────── */
+const COPY_BUTTON_SELECTORS = [
+  '[aria-label="Copy code"]',
+  '.copy-button',
+  '.code-block-copy-button',
+  '[data-testid="copy-code-button"]',
+  'button[class*="copy"]',
+  'div[class*="copyButton"]'
+].join(',');
+
+function findCopyButtonFromEventTarget(target) {
+  if (!target || typeof target.closest !== 'function') return null;
+  return target.closest(COPY_BUTTON_SELECTORS);
+}
+
+function getCodeTextFromButton(button) {
+  if (!button) return null;
+
+  let codeBlock = null;
+
+  const relativeParent = button.closest && button.closest('.relative');
+  if (relativeParent) codeBlock = relativeParent.querySelector('code, pre');
+
+  if (!codeBlock) {
+    const parent = button.parentElement;
+    if (parent) codeBlock = parent.querySelector('pre, code');
   }
+
+  if (!codeBlock && button.parentElement && button.parentElement.parentElement) {
+    codeBlock = button.parentElement.parentElement.querySelector('pre, code');
+  }
+
+  return codeBlock ? codeBlock.textContent : null;
+}
+
+/* ───────────────────────────── UI helpers ─────────────────────────────────── */
+function showNotification(message, isError = false) {
+  const notification = document.createElement('div');
+  notification.className = `notification ${isError ? 'error' : 'success'}`;
+  notification.textContent = message;
+  document.body.appendChild(notification);
+  setTimeout(() => notification.remove(), 2500);
 }
 
 function handleClipboardCopy(text) {
   if (!text) return false;
   try {
     clipboard.writeText(text);
-    showNotification('Copiado al portapapeles');
+    showNotification(STRINGS.copiedToClipboard);
     return true;
   } catch (error) {
     console.error('Error copiando al portapapeles:', error);
-    showNotification('Error al copiar', true);
+    showNotification(STRINGS.copyError, true);
     return false;
   }
 }
@@ -31,7 +182,7 @@ function handleClipboardRead() {
     return clipboard.readText();
   } catch (error) {
     console.error('Error leyendo del portapapeles:', error);
-    showNotification('Error al leer del portapapeles', true);
+    showNotification(STRINGS.readClipboardError, true);
     return null;
   }
 }
@@ -41,7 +192,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   readFromClipboard: () => handleClipboardRead(),
   getSystemInfo: () => ({ platform: process.platform, version: process.versions.electron }),
   invoke: (channel, ...args) => {
-    const validChannels = ['clipboard:copy', 'clipboard:read', 'dialog:show'];
+    const validChannels = ['dialog:show', 'provider:state'];
     if (validChannels.includes(channel)) return ipcRenderer.invoke(channel, ...args);
     return Promise.reject(new Error(`Canal no permitido: ${channel}`));
   }
@@ -51,40 +202,10 @@ function injectStyles() {
   const styleElement = document.createElement('style');
   styleElement.textContent = clipboardStyles;
   document.head.appendChild(styleElement);
-
-  // CSS de rendimiento: siempre activo.
-  // El fix más importante para chats largos: content-visibility: auto hace que
-  // Chromium omita el layout y paint de los mensajes fuera de la ventana visible.
-  // Sin esto, un chat de 200 mensajes obliga al renderer a procesar TODOS los
-  // nodos del DOM en cada repaint, saturando el único hilo del renderer.
-  const perfCss = document.createElement('style');
-  perfCss.id = 'cc-perf-css';
-  perfCss.textContent = `
-    /* Salta layout+paint de mensajes fuera del viewport (el cambio más crítico) */
-    article[data-testid^="conversation-turn"],
-    main article,
-    [data-testid^="conversation-turn"] {
-      content-visibility: auto;
-      /* contain-intrinsic-size da una altura estimada para el scrollbar.
-         1000px es conservador; evita saltos de scroll al hacer scroll rápido. */
-      contain-intrinsic-size: 0 1000px;
-    }
-
-    /* Evita que el navegador recalcule el ancla de scroll en cada mensaje nuevo,
-       lo cual relayoutea todo el documento en chats muy largos. */
-    html, body { overflow-anchor: none !important; }
-
-    /* Elimina backdrop-filter en elementos decorativos: es una operación
-       extremadamente cara que fuerza compositing layers adicionales. */
-    * { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
-  `;
-  document.head.appendChild(perfCss);
 }
 
 /**
- * CSP-safe copy-code fix:
- * - No <script> injection
- * - Uses capture-phase click delegation from preload isolated world
+ * CSP-safe copy-code fix: capture-phase click delegation from the isolated world.
  */
 function installCopyDelegate() {
   document.addEventListener(
@@ -96,7 +217,6 @@ function installCopyDelegate() {
       const text = getCodeTextFromButton(button);
       if (!text) return;
 
-      // Prevent the page handler from doing extra work (often expensive in huge DOM)
       event.preventDefault();
       event.stopPropagation();
 
@@ -111,8 +231,7 @@ function installCopyDelegate() {
 }
 
 /**
- * Fallback for "copy" events in code blocks (CSP-safe).
- * Only triggers when the browser produced empty clipboardData.
+ * Fallback for "copy" events in code blocks when clipboardData is empty.
  */
 function installCopyFallback() {
   document.addEventListener('copy', (event) => {
@@ -120,9 +239,7 @@ function installCopyFallback() {
     if (!target || !target.closest) return;
 
     const isInCodeBlock =
-      target.closest('pre, code') ||
-      target.closest('.relative') ||
-      target.closest('[class*="prose"]');
+      target.closest('pre, code') || target.closest('.relative') || target.closest('[class*="prose"]');
 
     if (isInCodeBlock && event.clipboardData && !event.clipboardData.getData('text')) {
       const selection = window.getSelection();
@@ -135,35 +252,25 @@ function installCopyFallback() {
   });
 }
 
+/**
+ * scheduler.yield() (Chromium 115+) gives the browser thread priority over
+ * React update batches during long streaming responses, keeping input snappy.
+ */
+function installInputPriorityBoost() {
+  if (typeof scheduler === 'undefined' || typeof scheduler.yield !== 'function') return;
+
+  const originalRAF = window.requestAnimationFrame;
+  window.requestAnimationFrame = function (callback) {
+    return originalRAF.call(window, async (...args) => {
+      await scheduler.yield();
+      callback(...args);
+    });
+  };
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   injectStyles();
   installCopyDelegate();
   installCopyFallback();
   installInputPriorityBoost();
 });
-
-/**
- * Durante el streaming de respuestas largas, ChatGPT dispara cientos de
- * MutationObserver callbacks por segundo (un nodo de texto nuevo por token).
- * Cada callback puede disparar microtareas de React que bloquean el event loop,
- * haciendo que los keystrokes del usuario se encolen y aparezcan con retraso.
- *
- * Fix: usamos scheduler.yield() (disponible en Chromium 115+) para ceder el
- * hilo al browser entre tareas pesadas, dando prioridad a los eventos de input.
- * En browsers sin scheduler.yield() esto es un no-op seguro.
- */
-function installInputPriorityBoost() {
-  if (typeof scheduler === 'undefined' || typeof scheduler.yield !== 'function') return;
-
-  // Interceptamos postMessage/requestAnimationFrame que ChatGPT usa para
-  // schedular actualizaciones de React, cediendo el hilo antes de cada batch.
-  const originalRAF = window.requestAnimationFrame;
-  window.requestAnimationFrame = function(callback) {
-    return originalRAF.call(window, async (...args) => {
-      // Cede el hilo al browser para procesar eventos de input pendientes
-      // antes de ejecutar el callback de React/ChatGPT.
-      await scheduler.yield();
-      callback(...args);
-    });
-  };
-}
