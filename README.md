@@ -5,6 +5,10 @@
 <h1 align="center">AI Desktop Hub</h1>
 
 <p align="center">
+  <strong>Version 2.0.2</strong>
+</p>
+
+<p align="center">
   Linux-first Electron desktop wrapper for popular AI assistants
 </p>
 
@@ -45,7 +49,7 @@ AI Desktop Hub turns supported AI web apps into standalone Linux desktop applica
       <strong>Qwen</strong>
     </td>
     <td align="center" width="16.6%">
-      <img src="assets/icons/providers/zai.png" alt="Z.ai" width="48" height="48"><br>
+      <img src="assets/icons/providers/zai.png" alt="Z.ai" width="56" height="56"><br>
       <strong>Z.ai</strong>
     </td>
   </tr>

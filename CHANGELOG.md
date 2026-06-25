@@ -6,6 +6,11 @@ The format is based on Keep a Changelog and this project follows semantic versio
 
 ## [Unreleased]
 
+### Changed
+
+- Documented the current application version in the README header.
+- Increased the rendered Z.ai icon size in the README and assistant selector for better visual balance.
+
 ## [2.0.2] - 2026-06-24
 
 ### Added

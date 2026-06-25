@@ -563,7 +563,7 @@ function buildProviderSelectorHtml() {
       const iconUrl = `data:image/png;base64,${iconBuffer.toString('base64')}`;
       return `
       <a class="provider-card" href="${SELECTOR_PROTOCOL}${provider.id}">
-        <img src="${iconUrl}" alt="${provider.name}" class="provider-icon">
+        <img src="${iconUrl}" alt="${provider.name}" class="provider-icon provider-icon-${provider.id}">
         <span class="provider-name">${provider.name}</span>
       </a>
     `;
