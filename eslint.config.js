@@ -40,6 +40,6 @@ module.exports = [
     }
   },
   {
-    ignores: ['dist/**', 'node_modules/**', '.flatpak-builder/**', 'flatpak/build-dir/**']
+    ignores: ['dist/**', 'node_modules/**']
   }
 ];

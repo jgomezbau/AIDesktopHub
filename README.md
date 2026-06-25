@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  Standalone launchers · Isolated sessions · Generic AI Desktop Hub mode · AppImage / .deb / Flatpak-ready
+  Standalone launchers · Isolated sessions · Generic AI Desktop Hub mode · AppImage / .deb / tar.gz
 </p>
 
 ## Overview
@@ -68,7 +68,6 @@ AI Desktop Hub turns supported AI web apps into standalone Linux desktop applica
 - AI Desktop Hub branding for taskbar, tray, and window icon in generic mode
 - Assistant-specific launchers, icons, and runtime identity when launched directly
 - Linux packaging for `AppImage`, `.deb`, and `tar.gz`
-- Flatpak metadata and desktop entries included in the repository
 
 ## Quick Start
 
@@ -185,11 +184,10 @@ Packaging notes:
 - The main packaging icon is [`assets/icons/aidesktophub.png`](assets/icons/aidesktophub.png).
 - Runtime and launcher assistant icons live in [`assets/icons/providers`](assets/icons/providers).
 - The Debian package installs the main `AIDesktopHub.desktop` entry plus assistant-specific `.desktop` launchers.
-- Flatpak metadata and desktop entries are maintained in [`flatpak/`](flatpak/).
 
 ## Release Automation
 
-GitHub Actions validates pushes and pull requests with syntax checks, lint, automated tests, and an unpacked build across Node 18, 20, and 22. Pull requests never publish releases.
+GitHub Actions validates pushes and pull requests with syntax checks, lint, automated tests, and an unpacked build across Node 20 and 22. Pull requests never publish releases.
 
 Releases are triggered only by semantic version tags such as `v2.0.2`. The release workflow verifies that the tag matches the version in `package.json`, builds the AppImage, Debian package, and `tar.gz` in a single pass, generates `SHA256SUMS.txt`, and attaches all four artifacts to the GitHub Release. Commit messages do not trigger releases.
 
@@ -200,30 +198,6 @@ After downloading the release files, verify their integrity from the same direct
 ```bash
 sha256sum --check SHA256SUMS.txt
 ```
-
-## Flatpak
-
-Local Flatpak build:
-
-```bash
-flatpak-builder --user --install --force-clean build-dir flatpak/io.github.jgomezbau.AIDesktopHub.yml
-```
-
-Run a specific assistant after installation:
-
-```bash
-flatpak run io.github.jgomezbau.AIDesktopHub --app=chatgpt
-flatpak run io.github.jgomezbau.AIDesktopHub --app=claude
-flatpak run io.github.jgomezbau.AIDesktopHub --app=gemini
-flatpak run io.github.jgomezbau.AIDesktopHub --app=grok
-flatpak run io.github.jgomezbau.AIDesktopHub --app=deepseek
-flatpak run io.github.jgomezbau.AIDesktopHub --app=qwen
-flatpak run io.github.jgomezbau.AIDesktopHub --app=zai
-```
-
-## Screenshots
-
-Screenshots used for Flatpak/AppStream metadata live in [`flatpak/screenshots`](flatpak/screenshots).
 
 ## Project Structure
 
@@ -238,7 +212,6 @@ Screenshots used for Flatpak/AppStream metadata live in [`flatpak/screenshots`](
 ├── .github/
 │   ├── workflows/
 │   └── dependabot.yml
-├── flatpak/
 ├── src/
 │   ├── main/        # index, apps, ipc, navigation, runtime-flags, templates, i18n
 │   ├── preload/     # self-contained sandboxed preload

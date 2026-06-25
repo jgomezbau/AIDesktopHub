@@ -10,6 +10,7 @@ The format is based on Keep a Changelog and this project follows semantic versio
 
 - Documented the current application version in the README header.
 - Fixed the supported-assistants README table so all seven provider columns use equal widths.
+- Removed unsupported sandbox-store packaging files and documentation.
 
 ## [2.0.2] - 2026-06-24
 
@@ -56,8 +57,8 @@ The format is based on Keep a Changelog and this project follows semantic versio
 - Added release tag and `package.json` version matching validation.
 - Added automatic AppImage, Debian package, and `tar.gz` builds with `SHA256SUMS.txt` checksums.
 - Added an About window to the tray with application, runtime component, platform, and provider information.
-- Added Z.ai as a supported assistant across runtime configuration, Linux launchers, Flatpak metadata, and documentation.
-- Added Gemini as a supported assistant across runtime configuration, Linux launchers, and Flatpak metadata.
+- Added Z.ai as a supported assistant across runtime configuration, Linux launchers, and documentation.
+- Added Gemini as a supported assistant across runtime configuration and Linux launchers.
 - Added a generic AI Desktop Hub launch mode for starts without `--app=<assistant>`.
 - Added an initial chooser window labeled `Elegi un Asistente` for first use in generic mode.
 - Added persistence for the last assistant selected in generic mode.
@@ -90,4 +91,3 @@ The format is based on Keep a Changelog and this project follows semantic versio
 - Initial public release baseline for the Linux-first Electron desktop wrapper.
 - Support for ChatGPT, Claude, Grok, DeepSeek, and Qwen.
 - Linux packaging targets for AppImage, Debian packages, and `tar.gz`.
-- Flatpak metadata and launcher files in the repository.

@@ -1,9 +1,0 @@
-[Desktop Entry]
-Name=AI Desktop Hub
-Comment=Desktop hub for AI assistants
-Exec=AIDesktopHub
-Icon=io.github.jgomezbau.AIDesktopHub
-Terminal=false
-Type=Application
-Categories=Utility;Network;Chat;
-StartupWMClass=AIDesktopHub
