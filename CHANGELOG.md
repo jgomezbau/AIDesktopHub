@@ -33,6 +33,7 @@ The format is based on Keep a Changelog and this project follows semantic versio
 - Promoted ESLint and Prettier to run as part of `npm run ci`.
 - Updated the assistant selector HTML to load through the shared template renderer.
 - Raised the development/build requirement to Node.js 20.19+ and npm 10+ to match the current `electron-builder` toolchain.
+- Updated GitHub Actions dependencies to current major versions to avoid deprecated runner runtimes.
 
 ### Security
 
