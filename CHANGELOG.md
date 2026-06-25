@@ -9,7 +9,7 @@ The format is based on Keep a Changelog and this project follows semantic versio
 ### Changed
 
 - Documented the current application version in the README header.
-- Added a README-specific Z.ai icon variant so it remains legible on GitHub's dark background.
+- Fixed the supported-assistants README table so all seven provider columns use equal widths.
 
 ## [2.0.2] - 2026-06-24
 

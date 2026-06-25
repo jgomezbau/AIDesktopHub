@@ -22,34 +22,34 @@ AI Desktop Hub turns supported AI web apps into standalone Linux desktop applica
 
 ## Supported Assistants
 
-<table>
+<table width="100%">
   <tr>
-    <td align="center" width="16.6%">
+    <td align="center" width="14.28%">
       <img src="assets/icons/providers/chatgpt.png" alt="ChatGPT" width="48" height="48"><br>
       <strong>ChatGPT</strong>
     </td>
-    <td align="center" width="16.6%">
+    <td align="center" width="14.28%">
       <img src="assets/icons/providers/claude.png" alt="Claude" width="48" height="48"><br>
       <strong>Claude</strong>
     </td>
-    <td align="center" width="16.6%">
+    <td align="center" width="14.28%">
       <img src="assets/icons/providers/gemini.png" alt="Gemini" width="48" height="48"><br>
       <strong>Gemini</strong>
     </td>
-    <td align="center" width="16.6%">
+    <td align="center" width="14.28%">
       <img src="assets/icons/providers/grok.png" alt="Grok" width="48" height="48"><br>
       <strong>Grok</strong>
     </td>
-    <td align="center" width="16.6%">
+    <td align="center" width="14.28%">
       <img src="assets/icons/providers/deepseek.png" alt="DeepSeek" width="48" height="48"><br>
       <strong>DeepSeek</strong>
     </td>
-    <td align="center" width="16.6%">
+    <td align="center" width="14.28%">
       <img src="assets/icons/providers/qwen.png" alt="Qwen" width="48" height="48"><br>
       <strong>Qwen</strong>
     </td>
-    <td align="center" width="16.6%">
-      <img src="assets/icons/readme/zai.png" alt="Z.ai" width="48" height="48"><br>
+    <td align="center" width="14.28%">
+      <img src="assets/icons/providers/zai.png" alt="Z.ai" width="48" height="48"><br>
       <strong>Z.ai</strong>
     </td>
   </tr>
