@@ -41,8 +41,7 @@ function matchesHostnames(targetUrl, hosts = []) {
 }
 
 /**
- * Loose rule match used for login-domain allowlists.
- * Falls back to substring matching for non-hostname rules.
+ * Strict rule match used for login-domain allowlists.
  */
 function matchesAllowed(url, rules = []) {
   const hostname = hostnameOf(url);
@@ -51,7 +50,7 @@ function matchesAllowed(url, rules = []) {
   return rules.some((rule) => {
     if (rule instanceof RegExp) return rule.test(hostname);
     const value = String(rule).toLowerCase();
-    return hostname === value || hostname.endsWith(`.${value}`) || hostname.includes(value);
+    return hostname === value || hostname.endsWith(`.${value}`);
   });
 }
 
@@ -81,11 +80,7 @@ const CLAUDE_AUTH_HOSTS = ['accounts.google.com', 'login.microsoftonline.com', '
 
 function isClaudeAuthPopup(url, activeAppId = 'claude') {
   if (activeAppId !== 'claude') return false;
-
-  if (matchesHostnames(url, CLAUDE_AUTH_HOSTS)) return true;
-
-  const lowerUrl = String(url).toLowerCase();
-  return ['oauth', 'signin', 'login', 'auth'].some((fragment) => lowerUrl.includes(fragment));
+  return matchesHostnames(url, CLAUDE_AUTH_HOSTS);
 }
 
 /**

@@ -18,6 +18,12 @@ test('resolveAppId rejects empty and unknown providers', () => {
   assert.equal(resolveAppId('unknown-provider'), null);
 });
 
+test('resolveAppId normalizes Kimi input', () => {
+  assert.equal(resolveAppId('kimi'), 'kimi');
+  assert.equal(resolveAppId('KIMI'), 'kimi');
+  assert.equal(resolveAppId(' kimi '), 'kimi');
+});
+
 test('parseArgs keeps the default application without an explicit provider', () => {
   assert.deepEqual(parseArgs(['electron', '.']), {
     appId: DEFAULT_APP_ID,
@@ -32,6 +38,13 @@ test('parseArgs resolves --app providers and marks them as explicit', () => {
   assert.equal(result.appId, 'zai');
   assert.equal(result.explicitApp, true);
   assert.equal(result.forceDevtools, false);
+});
+
+test('parseArgs resolves Kimi from --app', () => {
+  const result = parseArgs(['electron', '.', '--app=kimi']);
+
+  assert.equal(result.appId, 'kimi');
+  assert.equal(result.explicitApp, true);
 });
 
 test('parseArgs supports provider and npm start aliases', () => {
@@ -52,4 +65,12 @@ test('Z.ai has the expected isolated provider configuration', () => {
   assert.equal(APPS.zai.name, 'Z.ai');
   assert.equal(APPS.zai.url, 'https://chat.z.ai/');
   assert.equal(APPS.zai.icon, 'providers/zai.png');
+});
+
+test('Kimi has the official web app and a restricted login allowlist', () => {
+  assert.equal(APPS.kimi.id, 'kimi');
+  assert.equal(APPS.kimi.name, 'Kimi');
+  assert.equal(APPS.kimi.url, 'https://www.kimi.com/');
+  assert.equal(APPS.kimi.icon, 'providers/kimi.png');
+  assert.deepEqual(APPS.kimi.loginDomains, [/(^|\.)kimi\.com$/i]);
 });

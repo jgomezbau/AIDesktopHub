@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Kimi
+Comment=AI Desktop Hub - Kimi
+Exec="/opt/AI Desktop Hub/AIDesktopHub" --app=kimi
+Terminal=false
+Type=Application
+Icon=AIDesktopHub-kimi
+Categories=Utility;Network;Chat;
+StartupWMClass=AIDesktopHub-kimi

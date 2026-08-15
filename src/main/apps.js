@@ -125,6 +125,14 @@ const APPS = Object.freeze({
       /(^|\.)login\.live\.com$/i,
       /(^|\.)appleid\.apple\.com$/i
     ]
+  },
+  kimi: {
+    id: 'kimi',
+    name: 'Kimi',
+    title: 'Kimi',
+    url: 'https://www.kimi.com/',
+    icon: 'providers/kimi.png',
+    loginDomains: [/(^|\.)kimi\.com$/i]
   }
 });
 

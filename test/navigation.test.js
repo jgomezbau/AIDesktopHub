@@ -54,11 +54,21 @@ test('matchesHostnames rejects malformed URLs and empty rule sets', () => {
   assert.equal(matchesHostnames('https://x.com/', []), false);
 });
 
-test('matchesAllowed supports RegExp, exact, subdomain, and substring rules', () => {
+test('matchesAllowed supports RegExp, exact, and subdomain rules without suffix false positives', () => {
   assert.equal(matchesAllowed('https://claude.ai/', [/(^|\.)claude\.ai$/i]), true);
   assert.equal(matchesAllowed('https://accounts.google.com/', ['accounts.google.com']), true);
   assert.equal(matchesAllowed('https://accounts.google.com/', ['google.com']), true);
   assert.equal(matchesAllowed('https://random-site.com/', ['google.com']), false);
+  assert.equal(matchesAllowed('https://evilgoogle.com/', ['google.com']), false);
+});
+
+test('Kimi navigation accepts official hosts and rejects lookalikes', () => {
+  const kimiDomains = [/(^|\.)kimi\.com$/i];
+
+  assert.equal(matchesAllowed('https://www.kimi.com/', kimiDomains), true);
+  assert.equal(matchesAllowed('https://kimi.com/login', kimiDomains), true);
+  assert.equal(matchesAllowed('https://kimi.com.evil.example/', kimiDomains), false);
+  assert.equal(matchesAllowed('https://evil-kimi.com/', kimiDomains), false);
 });
 
 test('isGeminiInternalUrl is true only for gemini and known Google hosts', () => {
@@ -88,9 +98,8 @@ test('isClaudeAuthPopup matches SSO hosts only for claude', () => {
   assert.equal(isClaudeAuthPopup('https://accounts.google.com/oauth', 'claude'), true);
   assert.equal(isClaudeAuthPopup('https://login.microsoftonline.com/', 'claude'), true);
   assert.equal(isClaudeAuthPopup('https://appleid.apple.com/', 'claude'), true);
-  // Fragments in the path/query also count for claude.
-  assert.equal(isClaudeAuthPopup('https://example.com/signin', 'claude'), true);
-  assert.equal(isClaudeAuthPopup('https://example.com/auth/callback', 'claude'), true);
+  assert.equal(isClaudeAuthPopup('https://example.com/signin', 'claude'), false);
+  assert.equal(isClaudeAuthPopup('https://example.com/auth/callback', 'claude'), false);
   // Other providers never trigger the claude popup path.
   assert.equal(isClaudeAuthPopup('https://accounts.google.com/', 'chatgpt'), false);
 });

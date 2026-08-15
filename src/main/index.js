@@ -34,7 +34,8 @@ const PROFILE_LOCK_PORTS = {
   grok: 41004,
   deepseek: 41005,
   qwen: 41006,
-  zai: 41007
+  zai: 41007,
+  kimi: 41008
 };
 
 let activeAppConfig = cli.explicitApp ? APPS[cli.appId] : null;
@@ -807,11 +808,6 @@ function createWindow(windowState = null) {
     if (shouldUseLoginWindow(url)) {
       event.preventDefault();
       createLoginWindow(url);
-      return;
-    }
-
-    // Allow file URLs so drag-and-drop keeps working in the embedded web app.
-    if (url.startsWith('file://')) {
       return;
     }
 
