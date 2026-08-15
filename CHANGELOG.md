@@ -4,7 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and this project follows semantic versioning.
 
-## [Unreleased]
+## [2.0.4] - 2026-08-15
+
+### Fixed
+
+- Fixed Google authentication for the Kimi provider.
+- Kimi's Google OAuth flow now remains inside an Electron authentication popup instead of being redirected to the external system browser.
+- The Kimi authentication popup shares the provider's isolated Electron session, allowing the authentication state to be preserved between Google OAuth and Kimi.
+- Added provider-specific authentication popup configuration for Kimi.
+- Added support for Kimi's Google OAuth callback at `https://www.kimi.com/google-callback`.
+- Preserved the `window.opener` communication required by Kimi's Google authentication flow.
+- Restricted the Kimi Google OAuth authorization flow to the official `accounts.google.com` host.
+- Restricted the Kimi authentication callback to the exact official Kimi callback URL.
+- Added regression tests covering the Kimi Google authentication flow and malicious/lookalike authentication hosts.
+- Preserved Electron security protections including sandboxing, context isolation, web security, and isolated provider sessions.
+- Existing AI providers and their authentication flows remain unchanged.
 
 ## [2.0.3] - 2026-08-15
 

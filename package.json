@@ -1,6 +1,6 @@
 {
   "name": "aidesktophub",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "Linux desktop wrapper for ChatGPT, Claude, Gemini, Grok, DeepSeek, Qwen, Z.ai, and Kimi",
   "homepage": "https://github.com/jgomezbau/AIDesktopHub",
   "author": "Juan Bau <jgomezbau@gmail.com>",
