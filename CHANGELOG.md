@@ -6,11 +6,26 @@ The format is based on Keep a Changelog and this project follows semantic versio
 
 ## [Unreleased]
 
+## [2.0.3] - 2026-08-15
+
+### Added
+
+- Added Kimi as a supported provider, using its official web application at `https://www.kimi.com/`.
+- Added a Kimi runtime icon, Linux desktop launcher, direct launch commands, and provider/navigation tests.
+
 ### Changed
 
-- Documented the current application version in the README header.
-- Fixed the supported-assistants README table so all seven provider columns use equal widths.
-- Removed unsupported sandbox-store packaging files and documentation.
+- Updated provider metadata, packaging scripts, README, About-window provider data, and release metadata for eight supported assistants.
+
+### Fixed
+
+- Made login-domain matching strict, preventing lookalike hosts from being accepted by string-based allowlist rules.
+
+### Security
+
+- Blocked remote content from navigating the embedded application window to local `file://` URLs.
+- Restricted Claude SSO popups to the known Google, Microsoft, and Apple identity hosts.
+- Updated Electron to 41.10.5 and patched vulnerable transitive development dependencies; `npm audit` reports zero vulnerabilities.
 
 ## [2.0.2] - 2026-06-24
 

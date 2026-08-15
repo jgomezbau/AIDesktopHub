@@ -5,14 +5,14 @@
 <h1 align="center">AI Desktop Hub</h1>
 
 <p align="center">
-  <strong>Version 2.0.2</strong>
+  <strong>Version 2.0.3</strong>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Electron-41.1.0-47848F?logo=electron&logoColor=white" alt="Electron 41.1.0">
+  <img src="https://img.shields.io/badge/Electron-41.10.5-47848F?logo=electron&logoColor=white" alt="Electron 41.10.5">
   <img src="https://img.shields.io/badge/Node.js-20.19+-339933?logo=nodedotjs&logoColor=white" alt="Node.js 20.19+">
   <img src="https://img.shields.io/badge/Linux-AppImage%20%7C%20.deb%20%7C%20tar.gz-FCC624?logo=linux&logoColor=black" alt="Linux AppImage .deb tar.gz">
-  <img src="https://img.shields.io/badge/Assistants-7%20providers-7C3AED" alt="7 supported AI assistants">
+  <img src="https://img.shields.io/badge/Assistants-8%20providers-7C3AED" alt="8 supported AI assistants">
   <img src="https://img.shields.io/badge/License-MIT-green" alt="MIT License">
 </p>
 
@@ -32,33 +32,37 @@ AI Desktop Hub turns supported AI web apps into standalone Linux desktop applica
 
 <table width="100%" align="center">
   <tr>
-    <td align="center" width="14.28%">
+    <td align="center" width="12.5%">
       <img src="assets/icons/providers/chatgpt.png" alt="ChatGPT" width="48" height="48"><br>
       <strong>ChatGPT</strong>
     </td>
-    <td align="center" width="14.28%">
+    <td align="center" width="12.5%">
       <img src="assets/icons/providers/claude.png" alt="Claude" width="48" height="48"><br>
       <strong>Claude</strong>
     </td>
-    <td align="center" width="14.28%">
+    <td align="center" width="12.5%">
       <img src="assets/icons/providers/gemini.png" alt="Gemini" width="48" height="48"><br>
       <strong>Gemini</strong>
     </td>
-    <td align="center" width="14.28%">
+    <td align="center" width="12.5%">
       <img src="assets/icons/providers/grok.png" alt="Grok" width="48" height="48"><br>
       <strong>Grok</strong>
     </td>
-    <td align="center" width="14.28%">
+    <td align="center" width="12.5%">
       <img src="assets/icons/providers/deepseek.png" alt="DeepSeek" width="48" height="48"><br>
       <strong>DeepSeek</strong>
     </td>
-    <td align="center" width="14.28%">
+    <td align="center" width="12.5%">
       <img src="assets/icons/providers/qwen.png" alt="Qwen" width="48" height="48"><br>
       <strong>Qwen</strong>
     </td>
-    <td align="center" width="14.28%">
+    <td align="center" width="12.5%">
       <img src="assets/icons/providers/zai.png" alt="Z.ai" width="48" height="48"><br>
       <strong>Z.ai</strong>
+    </td>
+    <td align="center" width="12.5%">
+      <img src="assets/icons/providers/kimi.png" alt="Kimi" width="48" height="48"><br>
+      <strong>Kimi</strong>
     </td>
   </tr>
 </table>
@@ -103,12 +107,14 @@ npm run start:grok
 npm run start:deepseek
 npm run start:qwen
 npm run start:zai
+npm run start:kimi
 ```
 
 You can also launch directly with:
 
 ```bash
 electron . --app=chatgpt
+electron . --app=kimi
 ```
 
 ## How It Works
@@ -151,6 +157,7 @@ Useful commands:
 
 ```bash
 npm run dev
+npm run dev:kimi
 npm run debug
 npm test
 npm run check:syntax
@@ -197,7 +204,7 @@ Packaging notes:
 
 GitHub Actions validates pushes and pull requests with syntax checks, lint, automated tests, and an unpacked build across Node 20 and 22. Pull requests never publish releases.
 
-Releases are triggered only by semantic version tags such as `v2.0.2`. The release workflow verifies that the tag matches the version in `package.json`, builds the AppImage, Debian package, and `tar.gz` in a single pass, generates `SHA256SUMS.txt`, and attaches all four artifacts to the GitHub Release. Commit messages do not trigger releases.
+Releases are triggered only by semantic version tags such as `v2.0.3`. The release workflow verifies that the tag matches the version in `package.json`, builds the AppImage, Debian package, and `tar.gz` in a single pass, generates `SHA256SUMS.txt`, and attaches all four artifacts to the GitHub Release. Commit messages do not trigger releases.
 
 For Debian and Ubuntu, install the `.deb` package. On other Linux distributions, use the AppImage or extract the `tar.gz` archive.
 
@@ -241,7 +248,7 @@ sha256sum --check SHA256SUMS.txt
 
 ## Session Model
 
-Each assistant uses its own Electron partition and user-data directory. This keeps cookies, storage, and login state isolated between ChatGPT, Claude, Gemini, Grok, DeepSeek, Qwen, and Z.ai.
+Each assistant uses its own Electron partition and user-data directory. This keeps cookies, storage, and login state isolated between ChatGPT, Claude, Gemini, Grok, DeepSeek, Qwen, Z.ai, and Kimi.
 
 In generic mode, AI Desktop Hub also stores a small separate configuration file for the last assistant used:
 
@@ -274,7 +281,8 @@ It is not affiliated with, endorsed by, sponsored by, or supported by the compan
 - DeepSeek
 - Alibaba
 - Zhipu AI
+- Moonshot AI
 
-`ChatGPT`, `Claude`, `Gemini`, `Grok`, `DeepSeek`, `Qwen`, `Z.ai`, and any related product names, logos, icons, and trademarks are the property of their respective owners.
+`ChatGPT`, `Claude`, `Gemini`, `Grok`, `DeepSeek`, `Qwen`, `Z.ai`, `Kimi`, and any related product names, logos, icons, and trademarks are the property of their respective owners.
 
 This repository is intended to provide a Linux desktop wrapper experience for publicly available web applications. Users are responsible for complying with the terms of service, account requirements, and usage policies of each respective service.

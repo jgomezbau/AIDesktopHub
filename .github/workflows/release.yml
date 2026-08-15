@@ -70,17 +70,15 @@ jobs:
           cat > RELEASE_NOTES.md <<EOF
           # AI Desktop Hub ${GITHUB_REF_NAME}
 
-          ## Resumen
+          ## What's new
 
-          La versión ${GITHUB_REF_NAME} publica la versión declarada en **package.json** con validación automatizada, artefactos Linux y checksums reproducibles.
+          This release adds **Kimi** as an integrated AI Desktop Hub provider. Kimi launches from its official web application with an isolated Electron session, an in-app restricted navigation allowlist, a Linux desktop launcher, and its own runtime icon.
 
-          ## Cambios principales
+          It also hardens navigation by rejecting lookalike allowlist hosts and preventing remote content from navigating the embedded window to local `file://` URLs. Syntax checks, ESLint, provider/navigation tests, and the unpacked Electron build run before release artifacts are published.
 
-          - Validación de coincidencia entre el tag **${GITHUB_REF_NAME}** y la versión de **package.json**.
-          - Comprobación de sintaxis, lint y tests antes de publicar.
-          - Build automático de AppImage, paquete **.deb** y archivo **tar.gz**.
-          - Generación de **SHA256SUMS.txt** para verificar la integridad de los artefactos.
-          - Consulta el changelog del repositorio para el detalle funcional completo de esta versión.
+          ## Supported assistants
+
+          ChatGPT, Claude, Gemini, Grok, DeepSeek, Qwen, Z.ai, and Kimi.
 
           ## Artefactos incluidos
 
@@ -89,17 +87,31 @@ jobs:
           - Archivo **tar.gz**
           - **SHA256SUMS.txt**
 
-          ## Cómo instalar
+          ## Installation
 
-          En Debian o Ubuntu, descarga e instala el paquete **.deb**. En otras distribuciones Linux puedes ejecutar la AppImage o extraer el archivo **tar.gz**.
+          On Debian or Ubuntu, install the **.deb** package. On other Linux distributions, make the AppImage executable and run it, or extract the **tar.gz** archive.
 
-          ## Cómo verificar
+          ## Verification
 
           Descarga **SHA256SUMS.txt** junto con los artefactos y ejecuta:
 
               sha256sum --check SHA256SUMS.txt
 
-          ## Notas técnicas
+          ## Requirements
+
+          Runtime: Linux. Development and packaging: Node.js 20.19+ and npm 10+.
+
+          ## Development
+
+              npm install
+              npm test
+              npm run ci
+
+          ## Kimi
+
+          Start Kimi directly with `electron . --app=kimi` or `npm run start:kimi`.
+
+          ## Release process
 
           - Los releases se disparan mediante tags semánticos, no mediante mensajes de commit.
           - Los pull requests ejecutan las validaciones de CI, pero no publican releases.
