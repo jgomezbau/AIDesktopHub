@@ -67,8 +67,8 @@ jobs:
       - name: Create release notes
         shell: bash
         run: |
-          cat > RELEASE_NOTES.md <<EOF
-          # AI Desktop Hub ${GITHUB_REF_NAME}
+          cat > RELEASE_NOTES.md <<'EOF'
+          # AI Desktop Hub release
 
           ## What's new
 
