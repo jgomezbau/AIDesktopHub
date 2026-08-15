@@ -67,10 +67,12 @@ test('Z.ai has the expected isolated provider configuration', () => {
   assert.equal(APPS.zai.icon, 'providers/zai.png');
 });
 
-test('Kimi has the official web app and a restricted login allowlist', () => {
+test('Kimi has the official web app and a restricted Google popup configuration', () => {
   assert.equal(APPS.kimi.id, 'kimi');
   assert.equal(APPS.kimi.name, 'Kimi');
   assert.equal(APPS.kimi.url, 'https://www.kimi.com/');
   assert.equal(APPS.kimi.icon, 'providers/kimi.png');
   assert.deepEqual(APPS.kimi.loginDomains, [/(^|\.)kimi\.com$/i]);
+  assert.deepEqual(APPS.kimi.auth.popupDomains, [/(^|\.)accounts\.google\.com$/i]);
+  assert.deepEqual(APPS.kimi.auth.callbackUrls, ['https://www.kimi.com/google-callback']);
 });

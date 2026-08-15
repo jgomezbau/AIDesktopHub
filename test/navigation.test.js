@@ -9,6 +9,7 @@ const {
   hostnameMatches,
   matchesHostnames,
   matchesAllowed,
+  matchesCallbackUrl,
   isGeminiInternalUrl,
   isClaudeAuthPopup,
   isBaseAppUrl,
@@ -69,6 +70,19 @@ test('Kimi navigation accepts official hosts and rejects lookalikes', () => {
   assert.equal(matchesAllowed('https://kimi.com/login', kimiDomains), true);
   assert.equal(matchesAllowed('https://kimi.com.evil.example/', kimiDomains), false);
   assert.equal(matchesAllowed('https://evil-kimi.com/', kimiDomains), false);
+});
+
+test('Kimi Google popup and callback URLs are narrowly matched', () => {
+  const popupDomains = [/(^|\.)accounts\.google\.com$/i];
+  const callbackUrls = ['https://www.kimi.com/google-callback'];
+
+  assert.equal(matchesAllowed('https://accounts.google.com/o/oauth2/v2/auth', popupDomains), true);
+  assert.equal(matchesAllowed('https://accounts.google.com.attacker.example/', popupDomains), false);
+  assert.equal(matchesAllowed('https://evil-google.com/', popupDomains), false);
+  assert.equal(matchesCallbackUrl('https://www.kimi.com/google-callback#id_token=value', callbackUrls), true);
+  assert.equal(matchesCallbackUrl('https://www.kimi.com/google-callback?state=value', callbackUrls), true);
+  assert.equal(matchesCallbackUrl('https://www.kimi.com/other-callback', callbackUrls), false);
+  assert.equal(matchesCallbackUrl('https://www.kimi.com.attacker.example/google-callback', callbackUrls), false);
 });
 
 test('isGeminiInternalUrl is true only for gemini and known Google hosts', () => {

@@ -132,7 +132,11 @@ const APPS = Object.freeze({
     title: 'Kimi',
     url: 'https://www.kimi.com/',
     icon: 'providers/kimi.png',
-    loginDomains: [/(^|\.)kimi\.com$/i]
+    loginDomains: [/(^|\.)kimi\.com$/i],
+    auth: {
+      popupDomains: [/(^|\.)accounts\.google\.com$/i],
+      callbackUrls: ['https://www.kimi.com/google-callback']
+    }
   }
 });
 

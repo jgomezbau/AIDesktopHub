@@ -55,6 +55,23 @@ function matchesAllowed(url, rules = []) {
 }
 
 /**
+ * Returns true only when the URL has the same origin and pathname as a known
+ * OAuth callback. Query strings and fragments are deliberately ignored because
+ * OAuth responses carry their result there.
+ */
+function matchesCallbackUrl(targetUrl, callbackUrls = []) {
+  try {
+    const target = new URL(targetUrl);
+    return callbackUrls.some((callbackUrl) => {
+      const callback = new URL(callbackUrl);
+      return target.origin === callback.origin && target.pathname === callback.pathname;
+    });
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Google hosts that the Gemini flow must keep inside the embedded app:
  * consent, accounts, myaccount, and the general google.com umbrella.
  */
@@ -96,6 +113,7 @@ module.exports = {
   hostnameMatches,
   matchesHostnames,
   matchesAllowed,
+  matchesCallbackUrl,
   isGeminiInternalUrl,
   isClaudeAuthPopup,
   isBaseAppUrl,

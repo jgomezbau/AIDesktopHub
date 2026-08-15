@@ -544,6 +544,30 @@ function isClaudeAuthPopup(url) {
   return navigation.isClaudeAuthPopup(url, getActiveAppConfig().id);
 }
 
+function isProviderAuthPopup(url) {
+  return matchesAllowed(url, getActiveAppConfig().auth?.popupDomains);
+}
+
+function isProviderAuthCallback(url) {
+  return navigation.matchesCallbackUrl(url, getActiveAppConfig().auth?.callbackUrls);
+}
+
+function configureAuthPopup(popupWindow) {
+  popupWindow.webContents.on('will-navigate', (event, url) => {
+    if (isProviderAuthPopup(url) || isProviderAuthCallback(url)) {
+      return;
+    }
+
+    event.preventDefault();
+    shell.openExternal(url);
+  });
+
+  popupWindow.webContents.setWindowOpenHandler(({ url }) => {
+    shell.openExternal(url);
+    return { action: 'deny' };
+  });
+}
+
 function shouldUseLoginWindow(url) {
   if (isClaudeAuthPopup(url)) {
     return false;
@@ -787,6 +811,29 @@ function createWindow(windowState = null) {
       };
     }
 
+    if (isProviderAuthPopup(url)) {
+      return {
+        action: 'allow',
+        overrideBrowserWindowOptions: {
+          width: 500,
+          height: 600,
+          title: `${appConfig.title} - Login`,
+          show: true,
+          autoHideMenuBar: true,
+          icon: resolveIconPath(appConfig.icon),
+          webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
+            devTools: DEV_TOOLS_ENABLED,
+            sandbox: true,
+            webSecurity: true,
+            spellcheck: false,
+            partition: partitionName
+          }
+        }
+      };
+    }
+
     if (shouldUseLoginWindow(url)) {
       createLoginWindow(url);
       return { action: 'deny' };
@@ -794,6 +841,12 @@ function createWindow(windowState = null) {
 
     shell.openExternal(url);
     return { action: 'deny' };
+  });
+
+  windowRef.webContents.on('did-create-window', (popupWindow, details) => {
+    if (isProviderAuthPopup(details.url)) {
+      configureAuthPopup(popupWindow);
+    }
   });
 
   windowRef.webContents.on('will-navigate', (event, url) => {
