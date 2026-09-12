@@ -126,19 +126,24 @@ const APPS = Object.freeze({
       /(^|\.)appleid\.apple\.com$/i
     ]
   },
+
   kimi: {
     id: 'kimi',
     name: 'Kimi',
     title: 'Kimi',
-    url: 'https://www.kimi.com/',
+    url: 'https://www.kimi.ai/',
     icon: 'providers/kimi.png',
-    loginDomains: [/(^|\.)kimi\.com$/i],
+    loginDomains: [
+      /(^|\.)kimi\.ai$/i,
+      /(^|\.)kimi\.com$/i
+    ],
     auth: {
       popupDomains: [/(^|\.)accounts\.google\.com$/i],
       callbackUrls: ['https://www.kimi.com/google-callback']
     }
   }
 });
+
 
 function resolveAppId(input) {
   const normalized = String(input || '')
